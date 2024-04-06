@@ -5,12 +5,11 @@ using UnityEngine.UI;
 
 public class Play : MonoBehaviour
 {
-	private static readonly int GRAVITY_SCALE = 0;
-
 	public GameObject CueBall;
 	public GameObject Cue;
 	private Vector3 mousePos;
-	private float angle = 0.0f;
+
+    private float angle = 0.0f;
 
     private void Start()
 	{
@@ -35,9 +34,16 @@ public class Play : MonoBehaviour
 		if (isCursorInRange(mousePos, 2.0f))
         {
 			Cue.GetComponent<SpriteRenderer>().enabled = true;
-			Cue.transform.position = new Vector3(mousePos.x,1.0f,mousePos.z);
-			mousePos.y = CueBall.transform.position.y;
-			Vector3 targetDir = mousePos - CueBall.transform.position;
+            if (isCursorInRange(mousePos, 0.6f))
+			{
+                Cue.transform.position = CueBall.transform.position;
+            }
+			else
+			{
+                Cue.transform.position = new Vector3(mousePos.x, 1.0f, mousePos.z);
+            }
+            mousePos.y = CueBall.transform.position.y;
+            Vector3 targetDir = mousePos - CueBall.transform.position;
             angle = Mathf.Atan2(targetDir.x, targetDir.z) * Mathf.Rad2Deg;
 			Cue.transform.eulerAngles = new (90, angle, 0);
 		}
@@ -47,16 +53,26 @@ public class Play : MonoBehaviour
 		}
 		if (Input.GetMouseButtonDown(0) || Input.GetMouseButton(0))
 		{
-			//ObjectMove();
+			PlayAnimation();
 		}
 		else if (Input.GetMouseButtonUp(0))
 		{
-			//ObjectDrop();
+			
 		}
 	}
 
+	private void PlayAnimation()
+	{
 
-	void OnGUI()
+	}
+
+    public void HitBall()
+	{
+		CueBall.GetComponent<Rigidbody>().AddForce(new(5,0,5), ForceMode.Impulse);
+
+    }
+
+    void OnGUI()
 	{
 		// Make a background box
 		GUI.Box(new Rect(10, 10, 100, 90), "Loader Menu");
