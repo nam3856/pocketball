@@ -9,28 +9,42 @@ public class Play : MonoBehaviour
 
 	public GameObject CueBall;
 	public GameObject Cue;
+	private Vector3 mousePos;
+	private float angle = 0.0f;
 
-	private void Start()
+    private void Start()
 	{
 		//오브젝트 생성
 		//CueBall = Instantiate(CueBall, new Vector3(0, 0, 0), Quaternion.identity);
 	}
 	private bool isCursorInRange(Vector3 point, float range)
     {
-		if (point.x <= CueBall.transform.position.x + range && point.x >= CueBall.transform.position.x - range && point.y <= CueBall.transform.position.y + range && point.y >= CueBall.transform.position.y - range)
+		if (point.x <= CueBall.transform.position.x + range && point.x >= CueBall.transform.position.x - range && point.z <= CueBall.transform.position.z + range && point.z >= CueBall.transform.position.z - range)
 			return true;
+
 		return false;
 	}
 
+
+
+
 	private void Update()
 	{
-		Vector3 point = Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, -Camera.main.transform.position.z));
+		mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
 
-		if (isCursorInRange(point, 5.0f))
+		if (isCursorInRange(mousePos, 2.0f))
         {
-			point.z = -3.4f;
-			Cue.transform.position = point;
-        }
+			Cue.GetComponent<SpriteRenderer>().enabled = true;
+			Cue.transform.position = new Vector3(mousePos.x,1.0f,mousePos.z);
+			mousePos.y = CueBall.transform.position.y;
+			Vector3 targetDir = mousePos - CueBall.transform.position;
+            angle = Mathf.Atan2(targetDir.x, targetDir.z) * Mathf.Rad2Deg;
+			Cue.transform.eulerAngles = new (90, angle, 0);
+		}
+        else
+        {
+			Cue.GetComponent<SpriteRenderer>().enabled = false;
+		}
 		if (Input.GetMouseButtonDown(0) || Input.GetMouseButton(0))
 		{
 			//ObjectMove();
@@ -41,18 +55,24 @@ public class Play : MonoBehaviour
 		}
 	}
 
-	private void ObjectMove()
+
+	void OnGUI()
 	{
-		// Screen 좌표계인 mousePosition을 World 좌표계로 바꾼다
-		Vector3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+		// Make a background box
+		GUI.Box(new Rect(10, 10, 100, 90), "Loader Menu");
+        GUI.Label(new Rect(10, 100, 200, 20), $"{mousePos}");
+        GUI.Label(new Rect(10, 150, 200, 20), $"{angle}" );
 
-		// 오브젝트는 x로만 움직여야 하기 때문에 y는 고정
-		mousePos.z = CueBall.transform.position.z;
+		// Make the first button. If it is pressed, Application.Loadlevel (1) will be executed
+		if (GUI.Button(new Rect(20, 40, 80, 20), "Level 1"))
+		{
+			Debug.Log("hi");
+		}
 
-		CueBall.transform.position = mousePos;
-	}
-
-	private void ObjectDrop()
-	{
+		// Make the second button.
+		if (GUI.Button(new Rect(20, 70, 80, 20), "Level 2"))
+		{
+			Debug.Log("hello");
+		}
 	}
 }
