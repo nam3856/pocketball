@@ -1,0 +1,4 @@
+repository "Pocketball@kinggodmini@cloud"
+  path "/"
+    br "/main"
+    co "/main"
