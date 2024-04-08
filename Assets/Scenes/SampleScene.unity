@@ -175,6 +175,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Ball (11)
       objectReference: {fileID: 0}
+    - target: {fileID: 3572254767761222426, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
+      propertyPath: m_TagString
+      value: Ball
+      objectReference: {fileID: 0}
     - target: {fileID: 7364927485974728788, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
       propertyPath: m_Materials.Array.data[0]
       value: 
@@ -236,6 +240,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Ball (14)
       objectReference: {fileID: 0}
+    - target: {fileID: 3572254767761222426, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
+      propertyPath: m_TagString
+      value: Ball
+      objectReference: {fileID: 0}
     - target: {fileID: 7364927485974728788, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
       propertyPath: m_Materials.Array.data[0]
       value: 
@@ -296,6 +304,10 @@ PrefabInstance:
     - target: {fileID: 3572254767761222426, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
       propertyPath: m_Name
       value: Ball (4)
+      objectReference: {fileID: 0}
+    - target: {fileID: 3572254767761222426, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
+      propertyPath: m_TagString
+      value: Ball
       objectReference: {fileID: 0}
     - target: {fileID: 7364927485974728788, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
       propertyPath: m_Materials.Array.data[0]
@@ -460,6 +472,10 @@ PrefabInstance:
     - target: {fileID: 3572254767761222426, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
       propertyPath: m_Name
       value: Ball (3)
+      objectReference: {fileID: 0}
+    - target: {fileID: 3572254767761222426, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
+      propertyPath: m_TagString
+      value: Ball
       objectReference: {fileID: 0}
     - target: {fileID: 7364927485974728788, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
       propertyPath: m_Materials.Array.data[0]
@@ -825,6 +841,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Ball (13)
       objectReference: {fileID: 0}
+    - target: {fileID: 3572254767761222426, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
+      propertyPath: m_TagString
+      value: Ball
+      objectReference: {fileID: 0}
     - target: {fileID: 5469981779691005173, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
       propertyPath: m_CollisionDetection
       value: 2
@@ -890,6 +910,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Ball (8)
       objectReference: {fileID: 0}
+    - target: {fileID: 3572254767761222426, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
+      propertyPath: m_TagString
+      value: Ball
+      objectReference: {fileID: 0}
     - target: {fileID: 7364927485974728788, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
       propertyPath: m_Materials.Array.data[0]
       value: 
@@ -950,6 +974,10 @@ PrefabInstance:
     - target: {fileID: 3572254767761222426, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
       propertyPath: m_Name
       value: Ball (10)
+      objectReference: {fileID: 0}
+    - target: {fileID: 3572254767761222426, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
+      propertyPath: m_TagString
+      value: Ball
       objectReference: {fileID: 0}
     - target: {fileID: 7364927485974728788, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
       propertyPath: m_Materials.Array.data[0]
@@ -1173,7 +1201,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2537660113318000415, guid: bf8054383f55da1409505814e4e35a87, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -0.76
+      value: -0.023999989
       objectReference: {fileID: 0}
     - target: {fileID: 2537660113318000415, guid: bf8054383f55da1409505814e4e35a87, type: 3}
       propertyPath: m_LocalPosition.z
@@ -1268,6 +1296,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Ball (15)
       objectReference: {fileID: 0}
+    - target: {fileID: 3572254767761222426, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
+      propertyPath: m_TagString
+      value: Ball
+      objectReference: {fileID: 0}
     - target: {fileID: 7364927485974728788, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
       propertyPath: m_Materials.Array.data[0]
       value: 
@@ -1329,6 +1361,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Ball (12)
       objectReference: {fileID: 0}
+    - target: {fileID: 3572254767761222426, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
+      propertyPath: m_TagString
+      value: Ball
+      objectReference: {fileID: 0}
     - target: {fileID: 5469981779691005173, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
       propertyPath: m_CollisionDetection
       value: 2
@@ -1356,7 +1392,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2537660113318000415, guid: bf8054383f55da1409505814e4e35a87, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -0.62
+      value: 0.116
       objectReference: {fileID: 0}
     - target: {fileID: 2537660113318000415, guid: bf8054383f55da1409505814e4e35a87, type: 3}
       propertyPath: m_LocalPosition.z
@@ -1413,7 +1449,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2537660113318000415, guid: bf8054383f55da1409505814e4e35a87, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -0.7
+      value: 0.036000013
       objectReference: {fileID: 0}
     - target: {fileID: 2537660113318000415, guid: bf8054383f55da1409505814e4e35a87, type: 3}
       propertyPath: m_LocalPosition.z
@@ -1470,7 +1506,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2537660113318000415, guid: bf8054383f55da1409505814e4e35a87, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -0.67
+      value: 0.065999985
       objectReference: {fileID: 0}
     - target: {fileID: 2537660113318000415, guid: bf8054383f55da1409505814e4e35a87, type: 3}
       propertyPath: m_LocalPosition.z
@@ -1528,7 +1564,7 @@ MeshRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1455613219}
-  m_Enabled: 1
+  m_Enabled: 0
   m_CastShadows: 1
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1
@@ -1816,7 +1852,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2537660113318000415, guid: bf8054383f55da1409505814e4e35a87, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -0.65
+      value: 0.086000025
       objectReference: {fileID: 0}
     - target: {fileID: 2537660113318000415, guid: bf8054383f55da1409505814e4e35a87, type: 3}
       propertyPath: m_LocalPosition.z
@@ -1911,6 +1947,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Ball (5)
       objectReference: {fileID: 0}
+    - target: {fileID: 3572254767761222426, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
+      propertyPath: m_TagString
+      value: Ball
+      objectReference: {fileID: 0}
     - target: {fileID: 7364927485974728788, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
       propertyPath: m_Materials.Array.data[0]
       value: 
@@ -1971,6 +2011,10 @@ PrefabInstance:
     - target: {fileID: 3572254767761222426, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
       propertyPath: m_Name
       value: Ball (1)
+      objectReference: {fileID: 0}
+    - target: {fileID: 3572254767761222426, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
+      propertyPath: m_TagString
+      value: Ball
       objectReference: {fileID: 0}
     - target: {fileID: 7364927485974728788, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
       propertyPath: m_Materials.Array.data[0]
@@ -2033,6 +2077,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Ball (7)
       objectReference: {fileID: 0}
+    - target: {fileID: 3572254767761222426, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
+      propertyPath: m_TagString
+      value: Ball
+      objectReference: {fileID: 0}
     - target: {fileID: 7364927485974728788, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
       propertyPath: m_Materials.Array.data[0]
       value: 
@@ -2093,6 +2141,10 @@ PrefabInstance:
     - target: {fileID: 3572254767761222426, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
       propertyPath: m_Name
       value: Ball (9)
+      objectReference: {fileID: 0}
+    - target: {fileID: 3572254767761222426, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
+      propertyPath: m_TagString
+      value: Ball
       objectReference: {fileID: 0}
     - target: {fileID: 7364927485974728788, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
       propertyPath: m_Materials.Array.data[0]
@@ -2155,6 +2207,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Cue Ball
       objectReference: {fileID: 0}
+    - target: {fileID: 3572254767761222426, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
+      propertyPath: m_TagString
+      value: Ball
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -2214,6 +2270,10 @@ PrefabInstance:
     - target: {fileID: 3572254767761222426, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
       propertyPath: m_Name
       value: Ball (6)
+      objectReference: {fileID: 0}
+    - target: {fileID: 3572254767761222426, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
+      propertyPath: m_TagString
+      value: Ball
       objectReference: {fileID: 0}
     - target: {fileID: 7364927485974728788, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
       propertyPath: m_Materials.Array.data[0]
@@ -2276,6 +2336,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Ball (2)
       objectReference: {fileID: 0}
+    - target: {fileID: 3572254767761222426, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
+      propertyPath: m_TagString
+      value: Ball
+      objectReference: {fileID: 0}
     - target: {fileID: 7364927485974728788, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
       propertyPath: m_Materials.Array.data[0]
       value: 
@@ -2299,7 +2363,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2537660113318000415, guid: bf8054383f55da1409505814e4e35a87, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -0.526
+      value: 0.21
       objectReference: {fileID: 0}
     - target: {fileID: 2537660113318000415, guid: bf8054383f55da1409505814e4e35a87, type: 3}
       propertyPath: m_LocalPosition.z

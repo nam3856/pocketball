@@ -7,7 +7,7 @@ public class HoleController : MonoBehaviour
 {
     private void OnTriggerEnter(Collider other)
     {
-        if (other.CompareTag("Ball"))
+        if (other.CompareTag("Ball") && other.gameObject.name.CompareTo("Cue Ball") != 0)
         {
             Debug.Log($"{other.gameObject.name} ºüÁü");
             Destroy(other.gameObject);
