@@ -10,9 +10,8 @@ public class CueBallController : MonoBehaviour
 
     public void HitBall()
     {
-        float hitPower = 500f; // 공을 치는 힘의 크기
-        // 큐대의 마지막 이동 방향을 기반으로 공에 힘을 가함
-        Vector3 hitDirection = -1f * cueController.CueDirection;
+        float hitPower = 500f; 
+        Vector3 hitDirection = -1f * new Vector3(cueController.CueDirection.x,0, cueController.CueDirection.z);
         cueController.isHitting = true;
         CueBallRigidbody.AddForce(hitDirection * hitPower);
     }
@@ -23,6 +22,7 @@ public class CueBallController : MonoBehaviour
         {
             cueController.isHitting = false;
         }
+        else cueController.isHitting = true;
     }
 
     void OnGUI()
