@@ -10,7 +10,6 @@ public class CueController : MonoBehaviour
     private bool isPullingBack = false;
     private float pullBackDistance = 2f;
     private float[] attackSpeed = new float[] { 5f, 12f };
-    private bool isPlaying = false;
     public bool isHitting = false;
     public CueBallController cueBallController;
 
@@ -42,7 +41,7 @@ public class CueController : MonoBehaviour
         {
             Cue.GetComponent<SpriteRenderer>().enabled = true;
 
-            if (!isPullingBack && !isHitting)//´ç±â°í ÀÖ°Å³ª Ä¡°íÀÖÁö ¾Ê´Ù¸é
+            if (!(isPullingBack || isHitting))//ë‹¹ê¸°ê³  ìžˆì§€ ì•Šê±°ë‚˜ ì¹˜ê³ ìžˆì§€ ì•Šë‹¤ë©´
             {
                 mousePos.y = CueBall.transform.position.y;
                 Vector3 targetDir = (mousePos - CueBall.position).normalized;
@@ -52,14 +51,14 @@ public class CueController : MonoBehaviour
                 {
                     Cue.transform.position = CueBall.position + 0.01f * targetDir;
                 }
-                else//´ç±â°í ÀÖÁö ¾ÊÀ¸¸é Å¥°¡ ¸¶¿ì½º µû¶ó´Ù´Ô
+                else
                 {
                     Cue.transform.position = new Vector3(mousePos.x, 1.0f, mousePos.z);
                 }
 
             }
         }
-        else if (!isPullingBack)//´ç±â°í ÀÖÀ»¶© Å¥´ë°¡ ¾ø¾îÁö¸é ¾ÈµÊ
+        else if (!isPullingBack)
         {
             Cue.GetComponent<SpriteRenderer>().enabled = false;
         }
