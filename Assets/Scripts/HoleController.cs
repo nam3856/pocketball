@@ -6,24 +6,17 @@ using UnityEngine;
 
 public class HoleController : MonoBehaviour
 {
-    private void OnTriggerEnter(Collider other)
+    Transform[] holes;
+
+    private void Start()
     {
-        Debug.Log($"{other.gameObject.name} 진입");
-        if (other.CompareTag("Ball") && other.gameObject.name.CompareTo("Cue Ball") != 0)
+        GameObject[] holeObjects = GameObject.FindGameObjectsWithTag("Hole");
+        holes = new Transform[holeObjects.Length];
+        for(int i = 0; i < holeObjects.Length;i++)
         {
-            StartCoroutine(ByeBye(other));
+            holes[i] = holeObjects[i].transform; 
         }
     }
-    private IEnumerator ByeBye(Collider other)
-    {
-        Debug.Log($"{other.gameObject.name} 빠짐");
-        // 1초 기다림
-        yield return new WaitForSeconds(1f);
-        other.gameObject.GetComponent<SphereCollider>().enabled = false;
-        other.gameObject.GetComponent<Rigidbody>().mass = 0.2f;
-        // 2초 기다림
-        yield return new WaitForSeconds(2f);
-        // 오브젝트 제거
-        Destroy(other.gameObject);
-    }
+    
+    
 }
