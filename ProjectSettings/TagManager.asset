@@ -4,11 +4,11 @@
 TagManager:
   serializedVersion: 2
   tags:
-  - Ball
   - Hole
   - SolidBall
   - EightBall
   - StripedBall
+  - CueBall
   layers:
   - Default
   - TransparentFX

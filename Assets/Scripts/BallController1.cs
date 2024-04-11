@@ -39,6 +39,10 @@ public class BallController : MonoBehaviour
 
     private void Update()
     {
-        
+        if(transform.position.y<=-10f) 
+        {
+            transform.position = new (0, -1, 0);
+            gameObject.GetComponent<Rigidbody>().velocity = Vector3.zero;
+        }
     }
 }
