@@ -14,7 +14,7 @@ public class GameManager : MonoBehaviour
     private int solidCount = 7;
     private int stripedCount = 7;
     public GameObject eightBall;
-    private string playerTurn = "KM";
+    private string playerTurn = "1";
     public static event System.Action<string> OnTurnChanged;
     public bool hasExtraTurn = false;
     public bool FreeBall = false;
