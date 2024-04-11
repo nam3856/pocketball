@@ -13,7 +13,7 @@ public class CueBallController : MonoBehaviour
     {
         float hitPower = 1000f; 
         Vector3 hitDirection = -1f * new Vector3(cueController.CueDirection.x,0, cueController.CueDirection.z);
-        cueController.isHitting = true;
+        //cueController.isHitting = true;
         CueBallRigidbody.AddForce(hitDirection * hitPower);
     }
 
@@ -23,11 +23,6 @@ public class CueBallController : MonoBehaviour
         {
             Respawn();
         }
-        if (CueBallRigidbody.velocity.magnitude <= 0.05)
-        {
-            cueController.isHitting = false;
-        }
-        else cueController.isHitting = true;
     }
     public void Respawn()
     {

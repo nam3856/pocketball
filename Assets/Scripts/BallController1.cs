@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -8,8 +9,7 @@ public class BallController : MonoBehaviour
     public Rigidbody BallRigidbody;
     private GameManager gameManager;
     private bool isOnTable = true;
-
-
+    
     private void Start()
     {
         gameManager = FindObjectOfType<GameManager>();
