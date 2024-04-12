@@ -14,7 +14,7 @@ public class GameManager : MonoBehaviour
     private int solidCount = 7;
     private int stripedCount = 7;
     public GameObject eightBall;
-    private string playerTurn = "1";
+    private string playerTurn = "2";
     public static event System.Action<string> OnTurnChanged;
     public bool hasExtraTurn = false;
     public bool FreeBall = false;
@@ -23,6 +23,8 @@ public class GameManager : MonoBehaviour
     public CueController cueController;
     private float checkInterval = 0.5f;
     private float lastCheckTime;
+    private bool[] winnerSwitch = new bool[6];
+    public SceneLoader sceneLoader;
 
     void Start()
     {
@@ -51,30 +53,21 @@ public class GameManager : MonoBehaviour
         }
         else if (ball == eightBall)
         {
-            if (stripedCount == 0)
+            if (stripedCount == 0 && playerTurn=="2")
             {
-                if (!FreeBall)
-                    Debug.Log("Striped Win");
-                else
-                    Debug.Log("Solid Win ");
+                winnerSwitch[1] = true;
             }
-            else if (solidCount == 0)
+            else if (solidCount == 0 && playerTurn == "1")
             {
-                if (!FreeBall)
-                    Debug.Log("Solid Win");
-                else
-                    Debug.Log("Striped Win");
+                winnerSwitch[0] = true;
             }
-            else
+            else if (stripedCount > 0 && playerTurn == "2")
             {
-                if (string.Equals(playerTurn, "1"))
-                {
-                    Debug.Log("Player 2 Win");
-                }
-                else
-                {
-                    Debug.Log("Player 1 Win");
-                }
+                winnerSwitch[2] = true;
+            }
+            else if (solidCount > 0 && playerTurn == "1")
+            {
+                winnerSwitch[3] = true;
             }
         }
     }
@@ -89,7 +82,45 @@ public class GameManager : MonoBehaviour
         }
         
     }
+    int WinnerCheck()
+    {
+        if (winnerSwitch[0] && !FreeBall)
+        {
+            Debug.Log("Player 1 Win");
+            return 1;
+        }
+        else if (winnerSwitch[1] && !FreeBall)
+        {
+            Debug.Log("Player 2 Win");
+            return 2;
+        }
+        else if (winnerSwitch[2])
+        {
+            Debug.Log("Player 1 Win (P2 Foul)");
+            return 1;
+        }
+        else if (winnerSwitch[3])
+        {
+            Debug.Log("Player 2 Win (P1 Foul)");
+            return 2;
+        }
+        else if (FreeBall)
+        {
+            if (winnerSwitch[0])
+            {
+                Debug.Log("Player 2 Win (P1 Foul)");
+                return 2;
+            }
+            else if (winnerSwitch[1])
+            {
+                Debug.Log("Player 1 Win (P2 Foul)");
+                return 1;
+            }
+        }
 
+        TurnChange();
+        return 0;
+    }
     void TurnChange()
     {
         if (string.Equals(playerTurn, "1"))
@@ -116,7 +147,11 @@ public class GameManager : MonoBehaviour
         if (cueController.isHitting)
         {
             cueController.isHitting = false;
-            TurnChange();
+            if (WinnerCheck()>0)
+            {
+                sceneLoader.ChangeScene("end");
+            }
+                
         }
         
     }
@@ -124,5 +159,6 @@ public class GameManager : MonoBehaviour
     {
         GUI.Label(new Rect(20, 270, 80, 20), $"{stripedCount}, {solidCount}");
         GUI.Label(new Rect(20, 200, 100, 20), $"{isCheckingStopped} {playerTurn}");
+        GUI.Label(new Rect(20, 250, 150, 20), $"{winnerSwitch[0]} {winnerSwitch[1]} {winnerSwitch[2]} {winnerSwitch[3]}");
     }
 }
