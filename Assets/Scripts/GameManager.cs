@@ -16,6 +16,7 @@ public class GameManager : MonoBehaviour
     public GameObject eightBall;
     private string playerTurn = "2";
     public static event System.Action<string> OnTurnChanged;
+    public static event System.Action<int, int> OnScoreChanged;
     public bool hasExtraTurn = false;
     public bool FreeBall = false;
     public float minVelocityThreshold = 0.1f;
@@ -44,11 +45,13 @@ public class GameManager : MonoBehaviour
         {
             stripedCount--;
             hasExtraTurn = true;
+            OnScoreChanged?.Invoke(solidCount, stripedCount);
         }
         else if (ball.CompareTag("SolidBall"))
         {
             solidCount--;
             hasExtraTurn = true;
+            OnScoreChanged?.Invoke(solidCount, stripedCount);
         }
         else if (ball.CompareTag("CueBall"))
         {
@@ -126,6 +129,11 @@ public class GameManager : MonoBehaviour
     }
     void TurnChange()
     {
+        if (!FreeBall && hasExtraTurn)
+        {
+            hasExtraTurn = false;
+            return;
+        }
         if (string.Equals(playerTurn, "1"))
             playerTurn = "2";
         else

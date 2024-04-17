@@ -6,19 +6,25 @@ using UnityEngine;
 public class UIController : MonoBehaviour
 {
     public TextMeshProUGUI turnText;
+    public TextMeshProUGUI score;
 
     void OnEnable()
     {
         GameManager.OnTurnChanged += UpdateTurnText;
+        GameManager.OnScoreChanged += UpdateScore;
     }
 
     void OnDisable()
     {
         GameManager.OnTurnChanged -= UpdateTurnText;
+        GameManager.OnScoreChanged -= UpdateScore;
     }
 
     private void UpdateTurnText(string playerName)
     {
         turnText.text = "Player "+ playerName + "'s Turn";
+    }
+    private void UpdateScore(int solid, int striped) {
+        score.text = "Player 1 (Solid): " + solid + "\nPlayer 2 (Striped): " + striped;
     }
 }
