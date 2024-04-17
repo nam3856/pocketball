@@ -27,6 +27,7 @@ public class GameManager : MonoBehaviour
     public SceneLoader sceneLoader;
     public List<Transform> balls_transform;//Debug
     public Transform holePosition;//Debug
+    private int winner = 0;
 
     void Start()
     {
@@ -144,13 +145,14 @@ public class GameManager : MonoBehaviour
             }
         }
 
-        // ¸ðµç °øÀÌ ¸ØÃèÀ½
         isCheckingStopped = true;
         if (cueController.isHitting)
         {
             cueController.isHitting = false;
-            if (WinnerCheck()>0)
+            winner = WinnerCheck();
+            if (winner>0)
             {
+                DataManager.Instance.WinnerName = winner;
                 sceneLoader.ChangeScene("end");
             }
                 

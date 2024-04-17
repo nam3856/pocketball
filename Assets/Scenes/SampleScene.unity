@@ -266,6 +266,23 @@ MonoBehaviour:
   minVelocityThreshold: 0.1
   cueController: {fileID: 244602582}
   sceneLoader: {fileID: 82080414}
+  balls_transform:
+  - {fileID: 1569516232}
+  - {fileID: 340782141}
+  - {fileID: 1007400485}
+  - {fileID: 727736722}
+  - {fileID: 1629115267}
+  - {fileID: 562629314}
+  - {fileID: 1296847166}
+  - {fileID: 1586320516}
+  - {fileID: 728172211}
+  - {fileID: 2111452180}
+  - {fileID: 528141860}
+  - {fileID: 67782102}
+  - {fileID: 1201729144}
+  - {fileID: 934824419}
+  - {fileID: 1794751159}
+  holePosition: {fileID: 1455613224}
 --- !u!4 &6499676
 Transform:
   m_ObjectHideFlags: 0
@@ -384,6 +401,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   BallRigidbody: {fileID: 67782093}
+--- !u!4 &67782102 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 1517848081688075134, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
+  m_PrefabInstance: {fileID: 1950152752}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &82080413
 GameObject:
   m_ObjectHideFlags: 0
@@ -1122,6 +1144,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   BallRigidbody: {fileID: 340782132}
+--- !u!4 &340782141 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 1517848081688075134, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
+  m_PrefabInstance: {fileID: 2134891256}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &356886532
 GameObject:
   m_ObjectHideFlags: 0
@@ -1706,6 +1733,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   BallRigidbody: {fileID: 528141851}
+--- !u!4 &528141860 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 1517848081688075134, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
+  m_PrefabInstance: {fileID: 1808731923}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &562629304 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 3572254767761222426, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
@@ -1729,6 +1761,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   BallRigidbody: {fileID: 562629305}
+--- !u!4 &562629314 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 1517848081688075134, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
+  m_PrefabInstance: {fileID: 1254248446}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &576475466
 GameObject:
   m_ObjectHideFlags: 0
@@ -2251,6 +2288,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   BallRigidbody: {fileID: 727736713}
+--- !u!4 &727736722 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 1517848081688075134, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
+  m_PrefabInstance: {fileID: 2109966434}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &728172201 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 3572254767761222426, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
@@ -2274,6 +2316,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   BallRigidbody: {fileID: 728172202}
+--- !u!4 &728172211 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 1517848081688075134, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
+  m_PrefabInstance: {fileID: 701396373}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &740902403
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -2765,6 +2812,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   BallRigidbody: {fileID: 934824410}
+--- !u!4 &934824419 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 1517848081688075134, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
+  m_PrefabInstance: {fileID: 740902403}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &941000785
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -2857,6 +2909,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   BallRigidbody: {fileID: 1007400476}
+--- !u!4 &1007400485 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 1517848081688075134, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
+  m_PrefabInstance: {fileID: 509526473}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1024539177
 GameObject:
   m_ObjectHideFlags: 0
@@ -3144,6 +3201,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   BallRigidbody: {fileID: 1201729135}
+--- !u!4 &1201729144 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 1517848081688075134, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
+  m_PrefabInstance: {fileID: 1181868086}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1230345099
 GameObject:
   m_ObjectHideFlags: 0
@@ -3431,6 +3493,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   BallRigidbody: {fileID: 1296847157}
+--- !u!4 &1296847166 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 1517848081688075134, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
+  m_PrefabInstance: {fileID: 779415629}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &1394949774
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -3734,6 +3801,11 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!4 &1455613224 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 2537660113318000415, guid: bf8054383f55da1409505814e4e35a87, type: 3}
+  m_PrefabInstance: {fileID: 1455613218}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &1489458346
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -3826,6 +3898,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   BallRigidbody: {fileID: 1569516223}
+--- !u!4 &1569516232 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 1517848081688075134, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
+  m_PrefabInstance: {fileID: 1822156187}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1586320506 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 3572254767761222426, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
@@ -3849,6 +3926,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   BallRigidbody: {fileID: 1586320507}
+--- !u!4 &1586320516 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 1517848081688075134, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
+  m_PrefabInstance: {fileID: 1951161035}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1600145377 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 3572254767761222426, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
@@ -4021,6 +4103,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   BallRigidbody: {fileID: 1629115258}
+--- !u!4 &1629115267 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 1517848081688075134, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
+  m_PrefabInstance: {fileID: 58422976}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &1712764353
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -4239,6 +4326,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   BallRigidbody: {fileID: 1794751150}
+--- !u!4 &1794751159 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 1517848081688075134, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
+  m_PrefabInstance: {fileID: 229655863}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &1802881528
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -4784,6 +4876,50 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1985585182
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1985585184}
+  - component: {fileID: 1985585183}
+  m_Layer: 0
+  m_Name: DataManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1985585183
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1985585182}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d3fc8c7d0e5ea0046ace7e8781ca6d30, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!4 &1985585184
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1985585182}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -0.761, y: -0.5, z: 3.879}
+  m_LocalScale: {x: 0.5, y: 3, z: 0.5}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &1995961980
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -4962,6 +5098,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   BallRigidbody: {fileID: 2111452171}
+--- !u!4 &2111452180 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 1517848081688075134, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
+  m_PrefabInstance: {fileID: 218371270}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &2134891256
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -5237,4 +5378,5 @@ SceneRoots:
   - {fileID: 82080415}
   - {fileID: 6499676}
   - {fileID: 489193716}
+  - {fileID: 1985585184}
   - {fileID: 1956907514}
