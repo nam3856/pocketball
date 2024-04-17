@@ -101,9 +101,9 @@ public class CueController : MonoBehaviour
 
     void OnGUI()
     {
-        GUI.Box(new Rect(10, 10, 100, 90), "Loader Menu");
-        GUI.Label(new Rect(10, 100, 200, 20), $"{mousePos}");
-        GUI.Label(new Rect(10, 150, 200, 20), $"{angle}");
-        GUI.Label(new Rect(20, 40, 80, 20), $"{isPullingBack}");
+        GUI.Box(new Rect(10, 10, 250, 500), "Loader Menu");
+        GUI.Label(new Rect(10, 100, 250, 20), $"Mouse {mousePos}");
+        GUI.Label(new Rect(10, 120, 250, 20), $"Cue angle {angle}");
+        GUI.Label(new Rect(10, 40, 250, 20), $"Cue pulling {isPullingBack}");
     }
 }

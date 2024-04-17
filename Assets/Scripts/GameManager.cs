@@ -25,6 +25,8 @@ public class GameManager : MonoBehaviour
     private float lastCheckTime;
     private bool[] winnerSwitch = new bool[6];
     public SceneLoader sceneLoader;
+    public List<Transform> balls_transform;//Debug
+    public Transform holePosition;//Debug
 
     void Start()
     {
@@ -155,10 +157,27 @@ public class GameManager : MonoBehaviour
         }
         
     }
+    public void MoveBallsToHole()
+    {
+        StartCoroutine(MoveBallsToHoleSequentially());
+    }
+
+    public IEnumerator MoveBallsToHoleSequentially()
+    {
+        foreach (Transform ball in balls_transform)
+        {
+            ball.position = holePosition.position;
+            yield return new WaitForSeconds(0.6f);
+        }
+    }
     private void OnGUI()
     {
-        GUI.Label(new Rect(20, 270, 80, 20), $"{stripedCount}, {solidCount}");
-        GUI.Label(new Rect(20, 200, 100, 20), $"{isCheckingStopped} {playerTurn}");
-        GUI.Label(new Rect(20, 250, 150, 20), $"{winnerSwitch[0]} {winnerSwitch[1]} {winnerSwitch[2]} {winnerSwitch[3]}");
+        GUI.Label(new Rect(10, 170, 250, 20), $"Ball Count {stripedCount}, {solidCount}");
+        GUI.Label(new Rect(10, 190, 250, 20), $"Stopped? {isCheckingStopped} Player: {playerTurn}");
+        GUI.Label(new Rect(10, 210, 250, 20), $"{winnerSwitch[0]} {winnerSwitch[1]} {winnerSwitch[2]} {winnerSwitch[3]}");
+        if (GUI.Button(new Rect(10, 230, 100, 30), "Drop Balls"))
+        {
+            MoveBallsToHole();
+        }
     }
 }

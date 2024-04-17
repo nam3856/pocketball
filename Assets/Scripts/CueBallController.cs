@@ -33,7 +33,6 @@ public class CueBallController : MonoBehaviour
     }
     void OnGUI()
 	{
-		
-        GUI.Label(new Rect(120, 70, 80, 20), $"{CueBallRigidbody.velocity.magnitude}");
+        GUI.Label(new Rect(10, 70, 250, 20), $"Cue ball velocity: {CueBallRigidbody.velocity.magnitude}");
     }
 }
