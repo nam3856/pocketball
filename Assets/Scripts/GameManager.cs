@@ -14,13 +14,12 @@ public class GameManager : MonoBehaviour
     private int solidCount = 7;
     private int stripedCount = 7;
     public GameObject eightBall;
-    private string playerTurn = "2";
+    private string playerTurn = "1";
     public static event System.Action<string> OnTurnChanged;
     public static event System.Action<int, int> OnScoreChanged;
     public bool hasExtraTurn = false;
     public bool FreeBall = false;
     public float minVelocityThreshold = 0.1f;
-    private bool isCheckingStopped = false;
     public CueController cueController;
     private float checkInterval = 0.5f;
     private float lastCheckTime;
@@ -44,13 +43,19 @@ public class GameManager : MonoBehaviour
         if (ball.CompareTag("StripedBall"))
         {
             stripedCount--;
-            hasExtraTurn = true;
+            if (playerTurn == "2")
+            {
+                hasExtraTurn = true;
+            }
             OnScoreChanged?.Invoke(solidCount, stripedCount);
         }
         else if (ball.CompareTag("SolidBall"))
         {
             solidCount--;
-            hasExtraTurn = true;
+            if (playerTurn == "1")
+            {
+                hasExtraTurn = true;
+            }
             OnScoreChanged?.Invoke(solidCount, stripedCount);
         }
         else if (ball.CompareTag("CueBall"))
@@ -134,6 +139,11 @@ public class GameManager : MonoBehaviour
             hasExtraTurn = false;
             return;
         }
+        if (FreeBall)
+        {
+            //TODO: 프리볼 만들기
+            FreeBall = false;
+        }
         if (string.Equals(playerTurn, "1"))
             playerTurn = "2";
         else
@@ -147,13 +157,11 @@ public class GameManager : MonoBehaviour
         {
             if (ball.velocity.sqrMagnitude > 0.001f)
             {
-                isCheckingStopped = false;
                 cueController.isHitting = true;
                 return;
             }
         }
 
-        isCheckingStopped = true;
         if (cueController.isHitting)
         {
             cueController.isHitting = false;
@@ -180,6 +188,8 @@ public class GameManager : MonoBehaviour
             yield return new WaitForSeconds(0.6f);
         }
     }
+
+    /*
     private void OnGUI()
     {
         GUI.Label(new Rect(10, 170, 250, 20), $"Ball Count {stripedCount}, {solidCount}");
@@ -190,4 +200,5 @@ public class GameManager : MonoBehaviour
             MoveBallsToHole();
         }
     }
+    */
 }

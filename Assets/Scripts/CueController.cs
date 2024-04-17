@@ -98,7 +98,7 @@ public class CueController : MonoBehaviour
             isPullingBack = false;
         }
     }
-
+    /*
     void OnGUI()
     {
         GUI.Box(new Rect(10, 10, 250, 500), "Loader Menu");
@@ -106,4 +106,5 @@ public class CueController : MonoBehaviour
         GUI.Label(new Rect(10, 120, 250, 20), $"Cue angle {angle}");
         GUI.Label(new Rect(10, 40, 250, 20), $"Cue pulling {isPullingBack}");
     }
+    */
 }
