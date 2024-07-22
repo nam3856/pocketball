@@ -3,18 +3,26 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
+
 public class CueBallController : MonoBehaviour
 {
+    public AudioSource audioSource;
     public Rigidbody CueBallRigidbody;
     public CueController cueController;
     private float respawnHeight= -2f;
 
+    private void Start()
+    {
+        audioSource = GetComponent<AudioSource>();
+    }
     public void HitBall()
     {
+        audioSource.Play();
         float hitPower = 1000f; 
         Vector3 hitDirection = -1f * new Vector3(cueController.CueDirection.x,0, cueController.CueDirection.z);
         //cueController.isHitting = true;
         CueBallRigidbody.AddForce(hitDirection * hitPower);
+        
     }
 
     public void Update()
