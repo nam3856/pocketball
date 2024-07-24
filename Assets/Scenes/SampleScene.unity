@@ -377,38 +377,13 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 3572254767761222426, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1629115263}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
---- !u!1 &67782092 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 3572254767761222426, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
-  m_PrefabInstance: {fileID: 1950152752}
-  m_PrefabAsset: {fileID: 0}
 --- !u!54 &67782093 stripped
 Rigidbody:
   m_CorrespondingSourceObject: {fileID: 5469981779691005173, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
   m_PrefabInstance: {fileID: 1950152752}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &67782098
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 67782092}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c4567a3797665a445829992d2e49d9b8, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  BallHitBall: []
-  BallHitWall: []
-  BallFall: []
-  BallRigidbody: {fileID: 67782093}
-  audioSource: {fileID: 0}
 --- !u!4 &67782102 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1517848081688075134, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
@@ -820,10 +795,7 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 3572254767761222426, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 2111452176}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
 --- !u!1001 &229655863
 PrefabInstance:
@@ -904,10 +876,7 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 3572254767761222426, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1794751155}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
 --- !u!1 &244602579
 GameObject:
@@ -1150,33 +1119,11 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 91eb60f0684d6404abbc37ebb6e69f98, type: 3}
---- !u!1 &340782131 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 3572254767761222426, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
-  m_PrefabInstance: {fileID: 2134891256}
-  m_PrefabAsset: {fileID: 0}
 --- !u!54 &340782132 stripped
 Rigidbody:
   m_CorrespondingSourceObject: {fileID: 5469981779691005173, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
   m_PrefabInstance: {fileID: 2134891256}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &340782137
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 340782131}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c4567a3797665a445829992d2e49d9b8, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  BallHitBall: []
-  BallHitWall: []
-  BallFall: []
-  BallRigidbody: {fileID: 340782132}
-  audioSource: {fileID: 0}
 --- !u!4 &340782141 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1517848081688075134, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
@@ -1650,10 +1597,7 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 3572254767761222426, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1007400481}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
 --- !u!1 &519420028
 GameObject:
@@ -1757,33 +1701,11 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 1517848081688075134, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
   m_PrefabInstance: {fileID: 1808731923}
   m_PrefabAsset: {fileID: 0}
---- !u!1 &562629304 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 3572254767761222426, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
-  m_PrefabInstance: {fileID: 1254248446}
-  m_PrefabAsset: {fileID: 0}
 --- !u!54 &562629305 stripped
 Rigidbody:
   m_CorrespondingSourceObject: {fileID: 5469981779691005173, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
   m_PrefabInstance: {fileID: 1254248446}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &562629310
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 562629304}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c4567a3797665a445829992d2e49d9b8, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  BallHitBall: []
-  BallHitWall: []
-  BallFall: []
-  BallRigidbody: {fileID: 562629305}
-  audioSource: {fileID: 0}
 --- !u!4 &562629314 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1517848081688075134, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
@@ -2291,10 +2213,7 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 3572254767761222426, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 728172207}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
 --- !u!54 &727736713 stripped
 Rigidbody:
@@ -2306,33 +2225,11 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 1517848081688075134, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
   m_PrefabInstance: {fileID: 2109966434}
   m_PrefabAsset: {fileID: 0}
---- !u!1 &728172201 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 3572254767761222426, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
-  m_PrefabInstance: {fileID: 701396373}
-  m_PrefabAsset: {fileID: 0}
 --- !u!54 &728172202 stripped
 Rigidbody:
   m_CorrespondingSourceObject: {fileID: 5469981779691005173, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
   m_PrefabInstance: {fileID: 701396373}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &728172207
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 728172201}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c4567a3797665a445829992d2e49d9b8, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  BallHitBall: []
-  BallHitWall: []
-  BallFall: []
-  BallRigidbody: {fileID: 728172202}
-  audioSource: {fileID: 0}
 --- !u!4 &728172211 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1517848081688075134, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
@@ -2417,10 +2314,7 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 3572254767761222426, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 934824415}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
 --- !u!1001 &779415629
 PrefabInstance:
@@ -2501,10 +2395,7 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 3572254767761222426, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1296847162}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
 --- !u!1 &781524806
 GameObject:
@@ -2814,33 +2705,11 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &934824409 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 3572254767761222426, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
-  m_PrefabInstance: {fileID: 740902403}
-  m_PrefabAsset: {fileID: 0}
 --- !u!54 &934824410 stripped
 Rigidbody:
   m_CorrespondingSourceObject: {fileID: 5469981779691005173, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
   m_PrefabInstance: {fileID: 740902403}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &934824415
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 934824409}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c4567a3797665a445829992d2e49d9b8, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  BallHitBall: []
-  BallHitWall: []
-  BallFall: []
-  BallRigidbody: {fileID: 934824410}
-  audioSource: {fileID: 0}
 --- !u!4 &934824419 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1517848081688075134, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
@@ -2919,33 +2788,11 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 91eb60f0684d6404abbc37ebb6e69f98, type: 3}
---- !u!1 &1007400475 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 3572254767761222426, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
-  m_PrefabInstance: {fileID: 509526473}
-  m_PrefabAsset: {fileID: 0}
 --- !u!54 &1007400476 stripped
 Rigidbody:
   m_CorrespondingSourceObject: {fileID: 5469981779691005173, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
   m_PrefabInstance: {fileID: 509526473}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &1007400481
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1007400475}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c4567a3797665a445829992d2e49d9b8, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  BallHitBall: []
-  BallHitWall: []
-  BallFall: []
-  BallRigidbody: {fileID: 1007400476}
-  audioSource: {fileID: 0}
 --- !u!4 &1007400485 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1517848081688075134, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
@@ -3214,38 +3061,13 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 3572254767761222426, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1201729140}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
---- !u!1 &1201729134 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 3572254767761222426, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
-  m_PrefabInstance: {fileID: 1181868086}
-  m_PrefabAsset: {fileID: 0}
 --- !u!54 &1201729135 stripped
 Rigidbody:
   m_CorrespondingSourceObject: {fileID: 5469981779691005173, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
   m_PrefabInstance: {fileID: 1181868086}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &1201729140
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1201729134}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c4567a3797665a445829992d2e49d9b8, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  BallHitBall: []
-  BallHitWall: []
-  BallFall: []
-  BallRigidbody: {fileID: 1201729135}
-  audioSource: {fileID: 0}
 --- !u!4 &1201729144 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1517848081688075134, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
@@ -3441,10 +3263,7 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 3572254767761222426, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 562629310}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
 --- !u!1001 &1254879417
 PrefabInstance:
@@ -3519,33 +3338,11 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: bf8054383f55da1409505814e4e35a87, type: 3}
---- !u!1 &1296847156 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 3572254767761222426, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
-  m_PrefabInstance: {fileID: 779415629}
-  m_PrefabAsset: {fileID: 0}
 --- !u!54 &1296847157 stripped
 Rigidbody:
   m_CorrespondingSourceObject: {fileID: 5469981779691005173, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
   m_PrefabInstance: {fileID: 779415629}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &1296847162
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1296847156}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c4567a3797665a445829992d2e49d9b8, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  BallHitBall: []
-  BallHitWall: []
-  BallFall: []
-  BallRigidbody: {fileID: 1296847157}
-  audioSource: {fileID: 0}
 --- !u!4 &1296847166 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1517848081688075134, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
@@ -3932,65 +3729,21 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 91eb60f0684d6404abbc37ebb6e69f98, type: 3}
---- !u!1 &1569516222 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 3572254767761222426, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
-  m_PrefabInstance: {fileID: 1822156187}
-  m_PrefabAsset: {fileID: 0}
 --- !u!54 &1569516223 stripped
 Rigidbody:
   m_CorrespondingSourceObject: {fileID: 5469981779691005173, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
   m_PrefabInstance: {fileID: 1822156187}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &1569516228
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1569516222}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c4567a3797665a445829992d2e49d9b8, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  BallHitBall: []
-  BallHitWall: []
-  BallFall: []
-  BallRigidbody: {fileID: 1569516223}
-  audioSource: {fileID: 0}
 --- !u!4 &1569516232 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1517848081688075134, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
   m_PrefabInstance: {fileID: 1822156187}
-  m_PrefabAsset: {fileID: 0}
---- !u!1 &1586320506 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 3572254767761222426, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
-  m_PrefabInstance: {fileID: 1951161035}
   m_PrefabAsset: {fileID: 0}
 --- !u!54 &1586320507 stripped
 Rigidbody:
   m_CorrespondingSourceObject: {fileID: 5469981779691005173, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
   m_PrefabInstance: {fileID: 1951161035}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &1586320512
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1586320506}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c4567a3797665a445829992d2e49d9b8, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  BallHitBall: []
-  BallHitWall: []
-  BallFall: []
-  BallRigidbody: {fileID: 1586320507}
-  audioSource: {fileID: 0}
 --- !u!4 &1586320516 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1517848081688075134, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
@@ -4026,23 +3779,6 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 1517848081688075134, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
   m_PrefabInstance: {fileID: 1995961980}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &1600145387
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1600145377}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c4567a3797665a445829992d2e49d9b8, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  BallHitBall: []
-  BallHitWall: []
-  BallFall: []
-  BallRigidbody: {fileID: 1600145379}
-  audioSource: {fileID: 0}
 --- !u!82 &1600145388
 AudioSource:
   m_ObjectHideFlags: 0
@@ -4246,33 +3982,11 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &1629115257 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 3572254767761222426, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
-  m_PrefabInstance: {fileID: 58422976}
-  m_PrefabAsset: {fileID: 0}
 --- !u!54 &1629115258 stripped
 Rigidbody:
   m_CorrespondingSourceObject: {fileID: 5469981779691005173, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
   m_PrefabInstance: {fileID: 58422976}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &1629115263
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1629115257}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c4567a3797665a445829992d2e49d9b8, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  BallHitBall: []
-  BallHitWall: []
-  BallFall: []
-  BallRigidbody: {fileID: 1629115258}
-  audioSource: {fileID: 0}
 --- !u!4 &1629115267 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1517848081688075134, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
@@ -4495,23 +4209,6 @@ Rigidbody:
   m_CorrespondingSourceObject: {fileID: 5469981779691005173, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
   m_PrefabInstance: {fileID: 229655863}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &1794751155
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1794751149}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c4567a3797665a445829992d2e49d9b8, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  BallHitBall: []
-  BallHitWall: []
-  BallFall: []
-  BallRigidbody: {fileID: 1794751150}
-  audioSource: {fileID: 0}
 --- !u!4 &1794751159 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1517848081688075134, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
@@ -4750,10 +4447,7 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 3572254767761222426, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1569516228}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
 --- !u!1 &1888716423
 GameObject:
@@ -5077,10 +4771,7 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 3572254767761222426, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 67782098}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
 --- !u!1001 &1951161035
 PrefabInstance:
@@ -5161,10 +4852,7 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 3572254767761222426, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1586320512}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
 --- !u!1 &1956907512
 GameObject:
@@ -5264,6 +4952,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: -7644078749996536499, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
+      propertyPath: BallRigidbody
+      value: 
+      objectReference: {fileID: 1600145379}
     - target: {fileID: 1517848081688075134, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
       propertyPath: m_LocalPosition.x
       value: -4.47
@@ -5328,9 +5020,6 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 3572254767761222426, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1600145378}
-    - targetCorrespondingSourceObject: {fileID: 3572254767761222426, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1600145387}
     - targetCorrespondingSourceObject: {fileID: 3572254767761222426, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1600145388}
@@ -5416,33 +5105,11 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
---- !u!1 &2111452170 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 3572254767761222426, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
-  m_PrefabInstance: {fileID: 218371270}
-  m_PrefabAsset: {fileID: 0}
 --- !u!54 &2111452171 stripped
 Rigidbody:
   m_CorrespondingSourceObject: {fileID: 5469981779691005173, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
   m_PrefabInstance: {fileID: 218371270}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &2111452176
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2111452170}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c4567a3797665a445829992d2e49d9b8, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  BallHitBall: []
-  BallHitWall: []
-  BallFall: []
-  BallRigidbody: {fileID: 2111452171}
-  audioSource: {fileID: 0}
 --- !u!4 &2111452180 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1517848081688075134, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
@@ -5527,10 +5194,7 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 3572254767761222426, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 340782137}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 28ba57ba998c45f478e68d9063f033e8, type: 3}
 --- !u!1001 &5239334922030904022
 PrefabInstance:

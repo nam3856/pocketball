@@ -21,22 +21,23 @@ public class BallController : MonoBehaviour
     {
         audioSource = GetComponent<AudioSource>();
         gameManager = FindObjectOfType<GameManager>();
-        Debug.Log((int)UnityEngine.Random.Range(0, BallHitBall.Length));
-
     }
     private void OnCollisionEnter(Collision collision)
     {
+        float volume = Mathf.Clamp(BallRigidbody.velocity.magnitude / 5.0f, 0.1f, 1.0f);
+
         if (collision.gameObject.CompareTag("SolidBall") || collision.gameObject.CompareTag("StripedBall") || collision.gameObject.CompareTag("CueBall"))
         {
             int index = UnityEngine.Random.Range(0, BallHitBall.Length);
             BallClip = BallHitBall[index];
             audioSource.clip = BallClip;
+            audioSource.volume = volume;
             audioSource.Play();
         }
         else if (collision.gameObject.CompareTag("Wall"))
         {
-            int index = 0;
             audioSource.clip = BallHitWall[0];
+            audioSource.volume = volume;
             audioSource.Play();
         }
     }

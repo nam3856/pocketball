@@ -9,6 +9,7 @@ TagManager:
   - EightBall
   - StripedBall
   - CueBall
+  - Wall
   layers:
   - Default
   - TransparentFX
