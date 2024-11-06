@@ -10,13 +10,11 @@ public class UIController : MonoBehaviour
 
     void OnEnable()
     {
-        GameManager.OnTurnChanged += UpdateTurnText;
         GameManager.OnScoreChanged += UpdateScore;
     }
 
     void OnDisable()
     {
-        GameManager.OnTurnChanged -= UpdateTurnText;
         GameManager.OnScoreChanged -= UpdateScore;
     }
 

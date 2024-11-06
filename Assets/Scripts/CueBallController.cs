@@ -1,37 +1,33 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
-
 
 public class CueBallController : MonoBehaviour
 {
     public AudioSource audioSource;
     public Rigidbody CueBallRigidbody;
     public CueController cueController;
-    private float respawnHeight= -2f;
+    private float respawnHeight = -2f;
 
     private void Start()
     {
         audioSource = GetComponent<AudioSource>();
     }
-    public void HitBall()
+
+    public void HitBall(Vector3 direction, float power, Vector2 hitPoint)
     {
-        audioSource.Play();
-        float hitPower = 1000f; 
-        Vector3 hitDirection = -1f * new Vector3(cueController.CueDirection.x,0, cueController.CueDirection.z);
-        //cueController.isHitting = true;
-        CueBallRigidbody.AddForce(hitDirection * hitPower);
-        
+        // 타격점 위치 계산
+        Vector3 hitPoint3D = new Vector3(hitPoint.x, 0, hitPoint.y) * 0.1f;
+        Vector3 forcePosition = transform.position + hitPoint3D;
+
+        // 힘 적용
+        CueBallRigidbody.AddForceAtPosition(direction * 500f * power, forcePosition, ForceMode.Impulse);
     }
 
-    public void Update()
+    public bool IsBallStopped()
     {
-        if(transform.position.y < respawnHeight)
-        {
-            Respawn();
-        }
+        if (CueBallRigidbody.angularVelocity.magnitude < 1f && CueBallRigidbody.velocity.magnitude < 0.1f) CueBallRigidbody.angularVelocity = Vector2.zero;
+        return CueBallRigidbody.velocity.magnitude < 0.1f && CueBallRigidbody.angularVelocity.magnitude < 0.1f;
     }
+
     public void Respawn()
     {
         transform.position = new Vector3 (-4.5f,0.5f);

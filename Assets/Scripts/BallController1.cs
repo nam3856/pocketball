@@ -52,6 +52,13 @@ public class BallController : MonoBehaviour
         }
     }
 
+    public bool IsBallStopped()
+    {
+        if (transform.position.y <= -1f) return true;
+        if (BallRigidbody.angularVelocity.magnitude < 1f && BallRigidbody.velocity.magnitude < 0.1f) BallRigidbody.angularVelocity = Vector2.zero;
+        return BallRigidbody.velocity.magnitude < 0.1f && BallRigidbody.angularVelocity.magnitude < 0.1f;
+    }
+
     private IEnumerator ByeBye(Collider other)
     {
         int index = UnityEngine.Random.Range(0, BallFall.Length);
@@ -59,12 +66,7 @@ public class BallController : MonoBehaviour
         audioSource.clip = BallClip;
         audioSource.Play();
         yield return new WaitForSeconds(0.3f);
-        gameObject.GetComponent<SphereCollider>().enabled = false;
-        gameObject.GetComponent<Rigidbody>().mass = 0.1f;
-        yield return new WaitForSeconds(0.3f);
-        gameObject.GetComponent<SphereCollider>().enabled = true;
-        gameObject.GetComponent<Rigidbody>().mass = 1f;
-        //Destroy(other.gameObject);
+        transform.position = new(5.475f, -1, 0.805f);
 
     }
 
@@ -72,7 +74,7 @@ public class BallController : MonoBehaviour
     {
         if (transform.position.y <= -10f)
         {
-            transform.position = new(0, -1, 0);
+            transform.position = new(5.475f, -1, 0.805f);
             gameObject.GetComponent<Rigidbody>().velocity = Vector3.zero;
         }
     }
