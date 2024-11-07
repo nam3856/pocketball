@@ -2,6 +2,9 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using Cysharp.Threading.Tasks;
+using System.Threading;
+using System;
 
 public class GameManager : MonoBehaviour
 {
@@ -31,7 +34,7 @@ public class GameManager : MonoBehaviour
     private Dictionary<int, string> playerType = new Dictionary<int, string>();
     private List<GameObject> pocketedBallsThisTurn = new List<GameObject>();
     private bool cueBallPocketed = false;
-
+    private CancellationTokenSource movementCheckCancellationTokenSource;
     void Start()
     {
         stripedBalls = new List<GameObject>(GameObject.FindGameObjectsWithTag("StripedBall"));
@@ -63,6 +66,32 @@ public class GameManager : MonoBehaviour
             }
         }
         return true;
+    }
+
+    public async UniTaskVoid CheckBallsMovementAsync()
+    {
+        // 이전에 동작 중인 움직임 검사 취소
+        movementCheckCancellationTokenSource?.Cancel();
+        movementCheckCancellationTokenSource = new CancellationTokenSource();
+
+        // 공이 움직이고 있음을 표시
+        ballsAreMoving = true;
+        await UniTask.Delay(TimeSpan.FromSeconds(0.5f));
+        // 모든 공이 멈출 때까지 검사
+        while (!AreAllBallsStopped())
+        {
+            await UniTask.Delay(TimeSpan.FromSeconds(0.1f), cancellationToken: movementCheckCancellationTokenSource.Token);
+        }
+
+        // 공이 모두 멈췄을 때 처리
+        ballsAreMoving = false;
+
+        // 움직임 검사 취소
+        movementCheckCancellationTokenSource.Cancel();
+        movementCheckCancellationTokenSource = null;
+
+        // 턴 종료 처리
+        ProcessTurnEnd();
     }
 
     public void BallFell(GameObject ball)
@@ -164,14 +193,6 @@ public class GameManager : MonoBehaviour
         sceneLoader.ChangeScene("end");
     }
 
-    void Update()
-    {
-        if (Time.time - lastCheckTime > checkInterval)
-        {
-            lastCheckTime = Time.time;
-            CheckIfAllBallsStopped();
-        }
-    }
 
     void TurnChange()
     {
@@ -193,26 +214,11 @@ public class GameManager : MonoBehaviour
         }
 
         // 다음 턴을 위해 변수 초기화
+        isFirstTime = false;
         pocketedBallsThisTurn.Clear();
         cueBallPocketed = false;
     }
 
-    void CheckIfAllBallsStopped()
-    {
-        if (!AreAllBallsStopped())
-        {
-            ballsAreMoving = true;
-            return;
-        }
-        ballsAreMoving = false;
-
-        if (cueController.isHitting)
-        {
-            cueController.isHitting = false;
-
-            ProcessTurnEnd();
-        }
-    }
 
     void ProcessTurnEnd()
     {
@@ -289,7 +295,10 @@ public class GameManager : MonoBehaviour
             TurnChange();
         }
     }
-
+    void OnDestroy()
+    {
+        movementCheckCancellationTokenSource?.Cancel();
+    }
     private void OnGUI()
     {
         GUI.Label(new Rect(10, 170, 250, 20), $"Ball Count - Solid: {solidCount}, Striped: {stripedCount}");

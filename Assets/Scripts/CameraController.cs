@@ -14,7 +14,7 @@ public class CameraController : MonoBehaviour
     public Quaternion aimRotation;
     public float aimSize = 2f;
 
-    public float transitionSpeed = 2f;
+    public float transitionSpeed = 4f;
 
     public bool isTransitioning = false;
     public bool isAiming = false;
@@ -73,9 +73,9 @@ public class CameraController : MonoBehaviour
             else
             {
                 // 카메라를 원래 위치로 이동
-                mainCamera.transform.position = Vector3.Lerp(mainCamera.transform.position, originalPosition, Time.deltaTime * transitionSpeed);
-                mainCamera.transform.rotation = Quaternion.Slerp(mainCamera.transform.rotation, originalRotation, Time.deltaTime * transitionSpeed);
-                mainCamera.orthographicSize = Mathf.Lerp(mainCamera.orthographicSize, originalSize, Time.deltaTime * transitionSpeed);
+                mainCamera.transform.position = Vector3.Lerp(mainCamera.transform.position, originalPosition, Time.deltaTime * transitionSpeed * 2);
+                mainCamera.transform.rotation = Quaternion.Slerp(mainCamera.transform.rotation, originalRotation, Time.deltaTime * transitionSpeed * 2);
+                mainCamera.orthographicSize = Mathf.Lerp(mainCamera.orthographicSize, originalSize, Time.deltaTime * transitionSpeed * 2);
 
                 if (Vector3.Distance(mainCamera.transform.position, originalPosition) < 0.01f)
                 {
