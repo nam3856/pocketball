@@ -1151,6 +1151,16 @@ MonoBehaviour:
   - {fileID: 8300000, guid: 8b180fd33ff38904ba4ac86a34e4311e, type: 3}
   - {fileID: 8300000, guid: 060f08af67cdb964f8b8047d3ac4def4, type: 3}
   - {fileID: 8300000, guid: c4953686c26980f45b77a50223e8b325, type: 3}
+  - {fileID: 8300000, guid: 370a42ff95826a846bf56ecd3cec627d, type: 3}
+  - {fileID: 8300000, guid: 78a01679797751749820c39ad6487380, type: 3}
+  - {fileID: 8300000, guid: 169619c35c8bf8245a6cdeb98fe6bc0f, type: 3}
+  - {fileID: 8300000, guid: 41eb809cbb4bada42bbd1c022fca6783, type: 3}
+  - {fileID: 8300000, guid: 30e328b4dca8bfa41ac0adfed4cf9776, type: 3}
+  - {fileID: 8300000, guid: 5074f419bef7b234994176ab1ee539ca, type: 3}
+  - {fileID: 8300000, guid: ecc3284edede27d46ae395a4c219fa4e, type: 3}
+  - {fileID: 8300000, guid: 76a3bc013daa83d4cba8be82abb93cbf, type: 3}
+  - {fileID: 8300000, guid: f2ed70d7c08c330408890c1b3e4949d9, type: 3}
+  - {fileID: 8300000, guid: 62afde9360811fb4eb2b2600d62bdb3c, type: 3}
 --- !u!1 &211830992
 GameObject:
   m_ObjectHideFlags: 0
@@ -1437,7 +1447,7 @@ GameObject:
   - component: {fileID: 303365776}
   m_Layer: 0
   m_Name: Floor
-  m_TagString: Respawn
+  m_TagString: Floor
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -7637,7 +7647,7 @@ MeshCollider:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1725794173}
-  m_Material: {fileID: 13400000, guid: c7c44a060cf153543a42ebc1b7c711cb, type: 2}
+  m_Material: {fileID: 13400000, guid: 116cc98b454cb5a4fac564fd7e054ddd, type: 2}
   m_IncludeLayers:
     serializedVersion: 2
     m_Bits: 0

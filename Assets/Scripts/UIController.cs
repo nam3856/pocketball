@@ -23,6 +23,6 @@ public class UIController : MonoBehaviour
         turnText.text = "Player "+ playerName + "'s Turn";
     }
     private void UpdateScore(int solid, int striped) {
-        score.text = "Player 1 (Solid): " + solid + "\nPlayer 2 (Striped): " + striped;
+        score.text = "Player 1: " + solid + "\nPlayer 2: " + striped;
     }
 }

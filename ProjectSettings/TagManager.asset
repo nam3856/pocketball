@@ -10,6 +10,7 @@ TagManager:
   - StripedBall
   - CueBall
   - Wall
+  - Floor
   layers:
   - Default
   - TransparentFX

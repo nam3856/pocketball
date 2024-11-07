@@ -65,6 +65,10 @@ public class GameManager : MonoBehaviour
                 return false;
             }
         }
+        foreach (BallController ball in ballControllers)
+        {
+            ball.BallRigidbody.velocity = Vector3.zero;
+        }
         return true;
     }
 
@@ -190,7 +194,7 @@ public class GameManager : MonoBehaviour
     {
         Debug.Log($"Player {winner} Wins!");
         DataManager.Instance.WinnerName = winner;
-        sceneLoader.ChangeScene("end");
+        //sceneLoader.ChangeScene("end");
     }
 
 

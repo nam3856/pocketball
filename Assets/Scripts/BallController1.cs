@@ -50,6 +50,19 @@ public class BallController : MonoBehaviour
             StartCoroutine(ByeBye(other));
             gameManager.BallFell(gameObject);
         }
+        if (other.CompareTag("Floor") && isOnTable)
+        {
+            Debug.Log($"{name}ÀÌ ¹Ù´Ú¿¡ ¶³¾îÁü");
+            if (!CompareTag("CueBall"))
+            {
+                transform.position = new(0f, 0.5f, 0f);
+            }
+            else
+            {
+                gameManager.freeBall = true;
+                gameManager.hasExtraTurn = false;
+            }
+        }
     }
 
     public bool IsBallStopped()
@@ -67,15 +80,7 @@ public class BallController : MonoBehaviour
         audioSource.Play();
         yield return new WaitForSeconds(0.3f);
         transform.position = new(5.475f, -1, 0.805f);
-
+        if(CompareTag("CueBall")) isOnTable = true;
     }
 
-    private void Update()
-    {
-        if (transform.position.y <= -10f)
-        {
-            transform.position = new(5.475f, -1, 0.805f);
-            gameObject.GetComponent<Rigidbody>().velocity = Vector3.zero;
-        }
-    }
 }
