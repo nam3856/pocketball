@@ -1,11 +1,12 @@
 using UnityEngine;
-
-public class CueBallController : MonoBehaviour
+using Unity.Netcode;
+public class CueBallController : NetworkBehaviour
 {
     public AudioSource audioSource;
     public Rigidbody CueBallRigidbody;
     public CueController cueController;
     public float torqueMultiplier = 20f;
+    public AudioClip hitAudioClip;
 
     private void Start()
     {
@@ -14,6 +15,8 @@ public class CueBallController : MonoBehaviour
 
     public void HitBall(Vector3 direction, float power, Vector2 hitPoint)
     {
+        if (!IsServer)
+            return;
         // 방향 벡터 정규화
         direction = direction.normalized;
 
@@ -37,27 +40,21 @@ public class CueBallController : MonoBehaviour
             Debug.Log(torqueMagnitude);
             // 회전력(토크) 적용
             CueBallRigidbody.AddTorque(torqueAxis * torqueMagnitude, ForceMode.Impulse);
+
+            PlayCueBallHitAudioClientRpc();
         }
     }
-
+    [ClientRpc]
+    void PlayCueBallHitAudioClientRpc()
+    {
+        if (audioSource != null)
+        {
+            audioSource.PlayOneShot(hitAudioClip);
+        }
+    }
     public bool IsBallStopped()
     {
         if (CueBallRigidbody.angularVelocity.magnitude < 1f && CueBallRigidbody.velocity.magnitude < 0.1f) CueBallRigidbody.angularVelocity = Vector2.zero;
         return CueBallRigidbody.velocity.magnitude < 0.1f && CueBallRigidbody.angularVelocity.magnitude < 0.1f;
     }
-
-    public void Respawn()
-    {
-        transform.position = new Vector3 (-4.5f,0.5f);
-
-        CueBallRigidbody.velocity = Vector3.zero;
-        CueBallRigidbody.angularVelocity = Vector3.zero;
-    }
-
-    /*
-    void OnGUI()
-	{
-        GUI.Label(new Rect(10, 70, 250, 20), $"Cue ball velocity: {CueBallRigidbody.velocity.magnitude}");
-    }
-    */
 }

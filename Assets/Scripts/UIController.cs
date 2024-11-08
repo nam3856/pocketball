@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
+using Unity.Netcode;
 using UnityEngine;
 
 public class UIController : MonoBehaviour
@@ -10,19 +11,68 @@ public class UIController : MonoBehaviour
 
     void OnEnable()
     {
-        GameManager.OnScoreChanged += UpdateScore;
-        GameManager.OnTurnChanged += UpdateTurnText;
+        if (GameManager.Instance != null)
+        {
+            // 현재 턴 값을 UI에 초기 설정
+            UpdateTurnText(GameManager.Instance.playerTurn.Value);
+
+            // 턴이 변경될 때마다 호출될 콜백 등록
+            GameManager.Instance.playerTurn.OnValueChanged += OnPlayerTurnChanged;
+        }
+        else
+        {
+            Debug.LogError("UIController: GameManager 인스턴스를 찾을 수 없습니다.");
+        }
     }
 
     void OnDisable()
     {
-        GameManager.OnScoreChanged -= UpdateScore;
-        GameManager.OnTurnChanged -= UpdateTurnText;
+        //GameManager.OnScoreChanged -= UpdateScore;
+        //GameManager.OnTurnChanged -= UpdateTurnText;
     }
 
-    private void UpdateTurnText(int playerName)
+    private void UpdateTurnText(int turnIndex)
     {
-        turnText.text = "Player "+ playerName + "'s Turn";
+        if (GameManager.Instance.players.Count > turnIndex)
+        {
+            ulong playerId = GameManager.Instance.players[turnIndex];
+            string playerName = GetPlayerName(playerId);
+            turnText.text = $"Turn: Player {playerName}";
+        }
+        else
+        {
+            turnText.text = "Turn: Unknown";
+        }
+    }
+
+    private string GetPlayerName(ulong playerId)
+    {
+        // 예시: PlayerObject에 PlayerName 컴포넌트가 있다고 가정
+        if (NetworkManager.Singleton.ConnectedClients.TryGetValue(playerId, out var client))
+        {
+            if (client.PlayerObject != null)
+            {
+                var playerNameComponent = client.PlayerObject.GetComponent<PlayerName>();
+                if (playerNameComponent != null)
+                {
+                    // FixedString32Bytes를 string으로 변환하여 반환
+                    return playerNameComponent.PlayerNameVar.Value.ToString();
+                }
+            }
+        }
+        return playerId.ToString(); // 기본적으로 ClientId 반환
+    }
+
+    private void OnPlayerTurnChanged(int previousValue, int newValue)
+    {
+        UpdateTurnText(newValue);
+    }
+    void OnDestroy()
+    {
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.playerTurn.OnValueChanged -= OnPlayerTurnChanged;
+        }
     }
     private void UpdateScore(int solid, int striped) {
         //score.text = "Player 1: " + solid + "\nPlayer 2: " + striped;

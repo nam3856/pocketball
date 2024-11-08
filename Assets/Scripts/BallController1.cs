@@ -1,12 +1,8 @@
-using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.Reflection;
-using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
+using Unity.Netcode;
 
-public class BallController : MonoBehaviour
+public class BallController : NetworkBehaviour
 {
     public AudioClip[] BallHitBall;
     public AudioClip[] BallHitWall;
@@ -16,11 +12,31 @@ public class BallController : MonoBehaviour
     private GameManager gameManager;
     private bool isOnTable = true;
     public AudioSource audioSource;
-
+    public int ballNumber = 0;
+    public string ballType;
     private void Start()
     {
         audioSource = GetComponent<AudioSource>();
         gameManager = FindObjectOfType<GameManager>();
+
+        if (CompareTag("CueBall"))
+        {
+            ballType = "CueBall";
+            ballNumber = 0;
+        }
+        else if (CompareTag("EightBall"))
+        {
+            ballType = "EightBall";
+            ballNumber = 8;
+        }
+        else if (CompareTag("SolidBall"))
+        {
+            ballType = "SolidBall";
+        }
+        else if (CompareTag("StripedBall"))
+        {
+            ballType = "StripedBall";
+        }
     }
     private void OnCollisionEnter(Collision collision)
     {
@@ -29,20 +45,17 @@ public class BallController : MonoBehaviour
         if (collision.gameObject.CompareTag("SolidBall") || collision.gameObject.CompareTag("StripedBall") || collision.gameObject.CompareTag("CueBall"))
         {
             int index = UnityEngine.Random.Range(0, BallHitBall.Length);
-            BallClip = BallHitBall[index];
-            audioSource.clip = BallClip;
-            audioSource.volume = volume;
-            audioSource.Play();
+            PlayBallHitAudioClientRpc(index, volume);
         }
         else if (collision.gameObject.CompareTag("Wall"))
         {
-            audioSource.clip = BallHitWall[0];
-            audioSource.volume = volume;
-            audioSource.Play();
+            PlayBallHitWallAudioClientRpc(0, volume);
         }
     }
     private void OnTriggerEnter(Collider other)
     {
+        if (!IsServer)
+            return;
         if (other.CompareTag("Hole") && isOnTable)
         {
             isOnTable = false;
@@ -59,12 +72,36 @@ public class BallController : MonoBehaviour
             }
             else
             {
-                gameManager.freeBall = true;
-                gameManager.hasExtraTurn = false;
+                gameManager.SetFreeBallServerRpc(true);
+                gameManager.SethasExtraTurnServerRpc(false);
             }
         }
     }
+    [ClientRpc]
+    void PlayBallHitAudioClientRpc(int clipIndex, float volume)
+    {
+        if (BallHitBall != null && clipIndex < BallHitBall.Length)
+        {
+            audioSource.PlayOneShot(BallHitBall[clipIndex], volume);
+        }
+    }
 
+    [ClientRpc]
+    void PlayBallHitWallAudioClientRpc(int clipIndex, float volume)
+    {
+        if (BallHitWall != null && clipIndex < BallHitWall.Length)
+        {
+            audioSource.PlayOneShot(BallHitWall[clipIndex], volume);
+        }
+    }
+    [ClientRpc]
+    void PlayBallFallAudioClientRpc(int clipIndex)
+    {
+        if (BallFall != null && clipIndex < BallFall.Length)
+        {
+            audioSource.PlayOneShot(BallFall[clipIndex], 1.0f);
+        }
+    }
     public bool IsBallStopped()
     {
         if (transform.position.y <= -1f) return true;
@@ -76,11 +113,11 @@ public class BallController : MonoBehaviour
     {
         int index = UnityEngine.Random.Range(0, BallFall.Length);
         BallClip = BallFall[index];
-        audioSource.clip = BallClip;
-        audioSource.Play();
+        PlayBallFallAudioClientRpc(index);
         yield return new WaitForSeconds(0.3f);
         transform.position = new(5.475f, -1, 0.805f);
         if(CompareTag("CueBall")) isOnTable = true;
     }
+
 
 }

@@ -1,4 +1,3 @@
-using System;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -12,9 +11,13 @@ public class HitPointIndicatorController : MonoBehaviour, IPointerClickHandler
     {
         if (cueBallImage == null)
             cueBallImage = GetComponent<Image>();
-        cueController.OnHitBall += ResetIndicatorPosition;
     }
 
+    public void SubscribeEvent(CueController controller)
+    {
+        cueController = controller;
+        cueController.OnHitBall += ResetIndicatorPosition;
+    }
     private void ResetIndicatorPosition()
     {
         Debug.Log("이벤트 받음");
@@ -28,6 +31,9 @@ public class HitPointIndicatorController : MonoBehaviour, IPointerClickHandler
     }
     public void OnPointerClick(PointerEventData eventData)
     {
+        int myPlayerNumber = GameManager.Instance.GetMyPlayerNumber();
+        if (GameManager.Instance.playerTurn.Value != myPlayerNumber)
+            return;
         RectTransform rectTransform = cueBallImage.rectTransform;
 
         // 클릭한 위치를 이미지의 로컬 좌표로 변환

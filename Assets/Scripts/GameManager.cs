@@ -1,31 +1,17 @@
-using System.Collections;
+using Cysharp.Threading.Tasks;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEngine;
-using Cysharp.Threading.Tasks;
 using System.Threading;
-using System;
+using Unity.Collections;
 using Unity.Netcode;
+using UnityEngine;
 
-[Serializable]
-public class PlayerType : INetworkSerializable
-{
-    public int playerId;
-    public string type;
-
-    public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
-    {
-        serializer.SerializeValue(ref playerId);
-        serializer.SerializeValue(ref type);
-    }
-}
 
 public class GameManager : NetworkBehaviour
 {
-    public static GameManager Instance { get; private set; } // 싱글톤 패턴
-
-    private List<GameObject> stripedBalls;
-    private List<GameObject> solidBalls;
+    public static GameManager Instance { get; private set; }
+    public List<ulong> players = new List<ulong>();
     public List<BallController> ballControllers = new List<BallController>();
 
     public GameObject eightBall;
@@ -36,20 +22,320 @@ public class GameManager : NetworkBehaviour
     public NetworkVariable<int> stripedCount = new NetworkVariable<int>(7);
     public NetworkVariable<int> playerTurn = new NetworkVariable<int>(1);
     private NetworkVariable<int> winner = new NetworkVariable<int>(0);
-    public NetworkDictionary<int, PlayerType> playerTypes = new NetworkDictionary<int, PlayerType>();
+    public NetworkVariable<FixedString32Bytes> player1Type = new NetworkVariable<FixedString32Bytes>();
+    public NetworkVariable<FixedString32Bytes> player2Type = new NetworkVariable<FixedString32Bytes>();
 
     public NetworkVariable<ulong> player1ClientId = new NetworkVariable<ulong>();
     public NetworkVariable<ulong> player2ClientId = new NetworkVariable<ulong>();
 
-    public bool hasExtraTurn = false;
-    public bool freeBall = false;
-    public bool ballsAreMoving = false;
+    public NetworkVariable<bool> hasExtraTurn = new NetworkVariable<bool>(false);
+    public NetworkVariable<bool> freeBall = new NetworkVariable<bool>(false);
+    public NetworkVariable<bool> ballsAreMoving = new NetworkVariable<bool>(false);
 
     private bool isTypeAssigned = false;
     private bool isFirstTime = true;
     private List<GameObject> pocketedBallsThisTurn = new List<GameObject>();
     private bool cueBallPocketed = false;
     private CancellationTokenSource movementCheckCancellationTokenSource;
+    private int currentTurnIndex = 0; // 현재 턴 인덱스
+    private NetworkObject cueNetworkObject;
+
+    GameObject Cue;
+    public GameObject cuePrefab;
+    [Header("Ball Prefabs")]
+    public GameObject cueBallPrefab;
+    public GameObject ball1Prefab; // 1번 공
+    public GameObject ball8Prefab; // 8번 공
+    public List<GameObject> stripedBallPrefabs; // 줄무늬 공 프리팹 리스트
+    public List<GameObject> solidBallPrefabs; // 단색 공 프리팹 리스트
+
+    [Header("Table Boundaries")]
+    private Vector3 tableLeftEnd = new Vector3(-7.8f, 0.33f, 0f);
+    private Vector3 tableRightEnd = new Vector3(7.8f, 0.33f, 0f);
+
+    [Header("Ball Settings")]
+    public float ballRadius = 0.32f;
+    public float triangleSpacing = 0.66f;
+    private void OnClientConnected(ulong clientId)
+    {
+        if (!players.Contains(clientId))
+        {
+            players.Add(clientId);
+            Debug.Log($"플레이어 {clientId}가 게임에 참여했습니다.");
+
+            // 최소 플레이어 수에 도달하면 게임 시작
+            if (players.Count >= 2)
+            {
+                StartGame();
+            }
+        }
+    }
+
+    private void OnClientDisconnected(ulong clientId)
+    {
+        if (players.Contains(clientId))
+        {
+            players.Remove(clientId);
+            Debug.Log($"플레이어 {clientId}가 게임에서 떠났습니다.");
+
+            // 플레이어 수가 줄어들면 게임 종료 또는 대기 상태로 전환
+        }
+    }
+    public void StartGame()
+    {
+        if (IsServer)
+        {
+            Debug.Log("GameManager: 게임 시작");
+            SpawnCue();
+            SpawnBalls();
+            AssignCueOwnership();
+        }
+        else
+        {
+            Debug.LogWarning("GameManager: 클라이언트는 게임을 시작할 수 없습니다.");
+        }
+    }
+
+    private void SpawnCue()
+    {
+        Cue = Instantiate(cuePrefab, Vector3.zero, Quaternion.identity);
+        cueNetworkObject = Cue.GetComponent<NetworkObject>();
+        cueNetworkObject.Spawn();
+        cueController = Cue.GetComponentInChildren<CueController>();
+        HitPointIndicatorController hitPointIndicator = FindObjectOfType<HitPointIndicatorController>();
+        if (hitPointIndicator != null)
+        {
+            hitPointIndicator.SubscribeEvent(cueController);
+        }
+
+    }
+    private void SpawnBalls()
+    {
+        InitializeBalls();
+    }
+    public override void OnNetworkSpawn()
+    {
+        base.OnNetworkSpawn();
+
+        NetworkManager.Singleton.OnClientConnectedCallback += OnClientConnected;
+        NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnected;
+        solidCount.OnValueChanged += OnSolidCountChanged;
+        stripedCount.OnValueChanged += OnStripedCountChanged;
+        playerTurn.OnValueChanged += OnPlayerTurnChanged;
+
+        if (IsServer)
+        {
+            NetworkManager.OnClientConnectedCallback += OnClientConnectedCallback;
+        }
+        if (IsClient)
+        {
+            freeBall.OnValueChanged += HandleFreeBallChange;
+            ballsAreMoving.OnValueChanged += HandleBallsMovingChange;
+        }
+    }
+
+    private void HandleFreeBallChange(bool previousValue, bool newValue)
+    {
+        if (cueController != null)
+        {
+            if (newValue)
+                cueController.HideCue();
+            else
+                cueController.ShowCue();
+        }
+    }
+
+    private void HandleBallsMovingChange(bool previousValue, bool newValue)
+    {
+        if (cueController != null)
+        {
+            if (newValue)
+                cueController.HideCue();
+            else
+                cueController.ShowCue();
+        }
+    }
+    private void InitializeBalls()
+    {
+        // 1. 큐볼 스폰 (왼쪽 끝)
+        Vector3 cueBallPosition = CalculateCueBallPosition();
+        GameObject cueBall = Instantiate(cueBallPrefab, cueBallPosition, Quaternion.identity);
+        cueBall.GetComponent<NetworkObject>().Spawn();
+        CueBallController cueBallController = cueBall.GetComponent<CueBallController>();
+        cueBallController.cueController = cueController;
+        cueController.CueBall = cueBall.transform;
+        cueController.cueBallController = cueBallController;
+        cueController.hitPointIndicator = GameObject.Find("Canvas/aboutHit/HitIndicator").transform;
+        ballControllers.Add(cueBall.GetComponent<BallController>());
+        Debug.Log($"CueBall spawned at: {cueBallPosition}");
+
+        // 2. 삼각형 형태로 15개의 공 스폰 (오른쪽 끝)
+        SpawnBallTriangle();
+    }
+
+    private Vector3 CalculateCueBallPosition()
+    {
+        // 큐볼을 테이블의 왼쪽 끝에 배치
+        Vector3 tableDirection = (tableRightEnd - tableLeftEnd).normalized;
+        return tableLeftEnd + tableDirection * 2f;
+    }
+
+    private void SpawnBallTriangle()
+    {
+        Vector3 triangleOrigin = new Vector3(2, 0.33f, 0);
+        Vector3 tableDirection = (tableRightEnd - tableLeftEnd).normalized;
+        Vector3 perpendicular = Vector3.Cross(tableDirection, Vector3.up).normalized;
+        int currentBallIndex = 1;
+        int rowCount = 1;
+        List<GameObject> spawnedBalls = new List<GameObject>();
+        List<Material> usedMaterials = new List<Material>();
+
+        // 1번 줄 - 1번 공
+        GameObject num1Ball = Instantiate(ball1Prefab, GetPositionInTriangle(triangleOrigin, tableDirection, perpendicular, rowCount++, 0), Quaternion.identity);
+
+        // 2번 줄 - 줄무늬 랜덤, 단색 랜덤
+        SpawnRow(triangleOrigin, tableDirection, perpendicular, rowCount++, new[] { "striped", "solid" }, spawnedBalls);
+
+        // 3번 줄 - 단색 랜덤, 8번 공, 줄무늬 랜덤
+        eightBall = Instantiate(ball8Prefab, GetPositionInTriangle(triangleOrigin, tableDirection, perpendicular, rowCount, 1), Quaternion.identity);
+        SpawnRow(triangleOrigin, tableDirection, perpendicular, rowCount++, new[] { "solid", "striped" }, spawnedBalls, 1);
+
+        // 4번 줄 - 줄무늬 랜덤, 단색 랜덤, 줄무늬 랜덤, 단색 랜덤
+        SpawnRow(triangleOrigin, tableDirection, perpendicular, rowCount++, new[] { "striped", "solid", "striped", "solid" }, spawnedBalls);
+
+        // 5번 줄 - 줄무늬 랜덤, 단색 랜덤, 줄무늬 랜덤, 단색 랜덤, 줄무늬 랜덤
+        SpawnRow(triangleOrigin, tableDirection, perpendicular, rowCount, new[] { "striped", "solid", "striped", "solid", "striped" }, spawnedBalls);
+
+        foreach (var ball in spawnedBalls)
+        {
+            ball.GetComponent<NetworkObject>().Spawn();
+            ball.transform.rotation = Quaternion.Euler(90f, 0, 0);
+            if (currentBallIndex == 7) currentBallIndex++;
+
+            // 1번 공과 8번 공이 아닌 경우에만 머티리얼과 번호 부여
+            BallController ballController = ball.GetComponent<BallController>();
+            
+            string materialPath = "";
+            if (ball.tag == "StripedBall")
+            {
+                // 줄무늬 공에서 사용되지 않은 머티리얼 선택
+                var availableMaterials = Enumerable.Range(9, 7).Where(i => !usedMaterials.Any(m => m.name == $"Ball{i:D2}"));
+                if (availableMaterials.Any())
+                {
+                    int materialIndex = availableMaterials.ElementAt(UnityEngine.Random.Range(0, availableMaterials.Count()));
+                    materialPath = $"Materials/Ball{materialIndex:D2}";
+                }
+            }
+            else // Solid Ball
+            {
+                // 단색 공에서 사용되지 않은 머티리얼 선택
+                var availableMaterials = Enumerable.Range(2, 6).Where(i => !usedMaterials.Any(m => m.name == $"Ball{i:D2}"));
+                if (availableMaterials.Any())
+                {
+                    int materialIndex = availableMaterials.ElementAt(UnityEngine.Random.Range(0, availableMaterials.Count()));
+                    materialPath = $"Materials/Ball{materialIndex:D2}";
+                }
+            }
+
+            if (!string.IsNullOrEmpty(materialPath))
+            {
+                NetworkObjectReference networkObjectReference = new NetworkObjectReference(ball.GetComponent<NetworkObject>());
+                SetBallMaterialServerRpc(networkObjectReference, materialPath);
+            }
+
+            ballController.ballNumber = currentBallIndex + 1;
+            ballController.BallRigidbody = ball.GetComponent<Rigidbody>();
+            ballControllers.Add(ballController);
+
+
+            currentBallIndex++;
+        }
+
+        // 1번 공과 8번 공은 별도로 스폰
+        spawnedBalls.Add(num1Ball);
+        spawnedBalls.Add(eightBall);
+        num1Ball.GetComponent<NetworkObject>().Spawn();
+        num1Ball.transform.rotation = Quaternion.Euler(90f, 0, 0);
+        eightBall.GetComponent<NetworkObject>().Spawn();
+        eightBall.transform.rotation = Quaternion.Euler(90f, 0, 0);
+    }
+
+    private void SpawnRow(Vector3 origin, Vector3 direction, Vector3 perpendicular, int row, string[] types, List<GameObject> spawnedBalls, int skipIndex = -1)
+    {
+        for (int i = 0; i < types.Length; i++)
+        {
+            if (i == skipIndex)
+            {
+                Vector3 position = GetPositionInTriangle(origin, direction, perpendicular, row, i + 1);
+                GameObject prefab = GetRandomBallPrefab(types[i]);
+                GameObject ball = Instantiate(prefab, position, Quaternion.identity);
+                spawnedBalls.Add(ball);
+            }
+            else
+            {
+                Vector3 position = GetPositionInTriangle(origin, direction, perpendicular, row, i);
+                GameObject prefab = GetRandomBallPrefab(types[i]);
+                GameObject ball = Instantiate(prefab, position, Quaternion.identity);
+                spawnedBalls.Add(ball);
+            }
+        }
+    }
+
+    private Vector3 GetPositionInTriangle(Vector3 origin, Vector3 direction, Vector3 perpendicular, int row, int index)
+    {
+        // 각 줄의 시작 위치를 계산하고 공의 위치를 좌우로 퍼지게 배치
+        Vector3 rowStart = origin + direction * (row - 1) * triangleSpacing * Mathf.Sin(60 * Mathf.Deg2Rad);
+        return rowStart + perpendicular * ((index - (row - 1) / 2.0f) * triangleSpacing);
+    }
+
+    private GameObject GetRandomBallPrefab(string type)
+    {
+        if (type == "striped")
+        {
+            return stripedBallPrefabs[UnityEngine.Random.Range(0, stripedBallPrefabs.Count)];
+        }
+        else // solid
+        {
+            return solidBallPrefabs[UnityEngine.Random.Range(0, solidBallPrefabs.Count)];
+        }
+    }
+
+    [ServerRpc]
+    public void SetBallMaterialServerRpc(NetworkObjectReference ballReference, string materialName)
+    {
+        if (ballReference.TryGet(out NetworkObject networkObject))
+        {
+            GameObject ball = networkObject.gameObject;
+            Material material = Resources.Load<Material>(materialName);
+            if (material != null)
+            {
+                // 머티리얼 설정
+                ball.GetComponent<MeshRenderer>().material = material;
+
+                // 모든 클라이언트에게 머티리얼 설정 전달
+                SetBallMaterialClientRpc(ballReference, materialName);
+            }
+            else
+            {
+                Debug.LogWarning($"Material {materialName} not found.");
+            }
+        }
+    }
+
+    [ClientRpc]
+    private void SetBallMaterialClientRpc(NetworkObjectReference ballReference, string materialName)
+    {
+        if (ballReference.TryGet(out NetworkObject networkObject))
+        {
+            GameObject ball = networkObject.gameObject;
+            Material material = Resources.Load<Material>(materialName);
+            if (material != null)
+            {
+                ball.GetComponent<MeshRenderer>().material = material;
+            }
+        }
+    }
+
 
     void Awake()
     {
@@ -67,24 +353,7 @@ public class GameManager : NetworkBehaviour
 
     void Start()
     {
-        stripedBalls = new List<GameObject>(GameObject.FindGameObjectsWithTag("StripedBall"));
-        solidBalls = new List<GameObject>(GameObject.FindGameObjectsWithTag("SolidBall"));
-
-        // 모든 공의 BallController를 가져와 리스트에 추가
-        var ballObjects = GameObject.FindGameObjectsWithTag("StripedBall")
-            .Concat(GameObject.FindGameObjectsWithTag("SolidBall"))
-            .Concat(GameObject.FindGameObjectsWithTag("EightBall"))
-            .Concat(GameObject.FindGameObjectsWithTag("CueBall"));
-        foreach (var obj in ballObjects)
-        {
-            var ballController = obj.GetComponent<BallController>();
-            if (ballController != null)
-            {
-                ballControllers.Add(ballController);
-            }
-        }
         isFirstTime = true;
-        Debug.Log($"Balls Count: {ballControllers.Count}");
 
         if (IsServer)
         {
@@ -93,19 +362,6 @@ public class GameManager : NetworkBehaviour
             playerTurn.Value = 1;
         }
 
-        // 이벤트 구독은 OnNetworkSpawn에서만 수행합니다.
-    }
-
-    public override void OnNetworkSpawn()
-    {
-        solidCount.OnValueChanged += OnSolidCountChanged;
-        stripedCount.OnValueChanged += OnStripedCountChanged;
-        playerTurn.OnValueChanged += OnPlayerTurnChanged;
-
-        if (IsServer)
-        {
-            NetworkManager.OnClientConnectedCallback += OnClientConnectedCallback;
-        }
     }
 
     private void OnClientConnectedCallback(ulong clientId)
@@ -138,8 +394,7 @@ public class GameManager : NetworkBehaviour
 
     private void OnPlayerTurnChanged(int previousValue, int newValue)
     {
-        // 클라이언트 측에서 턴 변경 처리
-        // 예: UI 업데이트 또는 턴에 따른 입력 처리
+        
     }
 
     public int GetMyPlayerNumber()
@@ -155,12 +410,18 @@ public class GameManager : NetworkBehaviour
 
     string GetPlayerType(int playerId)
     {
-        foreach (var playerType in playerTypes)
+        if (playerId == 1)
         {
-            if (playerType.playerId == playerId)
-                return playerType.type;
+            return player1Type.Value.ToString();
         }
-        return null; // 또는 "Not Assigned"
+        else if (playerId == 2)
+        {
+            return player2Type.Value.ToString();
+        }
+        else
+        {
+            return null;
+        }
     }
 
     public bool AreAllBallsStopped()
@@ -181,21 +442,31 @@ public class GameManager : NetworkBehaviour
 
     public async UniTaskVoid CheckBallsMovementAsync()
     {
+        if (!IsServer) return; // 서버에서만 실행
+
         // 이전에 동작 중인 움직임 검사 취소
         movementCheckCancellationTokenSource?.Cancel();
         movementCheckCancellationTokenSource = new CancellationTokenSource();
 
         // 공이 움직이고 있음을 표시
-        ballsAreMoving = true;
+        ballsAreMoving.Value = true;
         await UniTask.Delay(TimeSpan.FromSeconds(0.5f));
+
         // 모든 공이 멈출 때까지 검사
         while (!AreAllBallsStopped())
         {
-            await UniTask.Delay(TimeSpan.FromSeconds(0.1f), cancellationToken: movementCheckCancellationTokenSource.Token);
+            try
+            {
+                await UniTask.Delay(TimeSpan.FromSeconds(0.1f), cancellationToken: movementCheckCancellationTokenSource.Token);
+            }
+            catch (OperationCanceledException)
+            {
+                return;
+            }
         }
 
         // 공이 모두 멈췄을 때 처리
-        ballsAreMoving = false;
+        ballsAreMoving.Value = false;
 
         // 움직임 검사 취소
         movementCheckCancellationTokenSource.Cancel();
@@ -244,10 +515,10 @@ public class GameManager : NetworkBehaviour
                 AssignPlayerType("StripedBall");
             }
 
-            if (!IsPlayerTypeAssigned(playerTurn.Value)) hasExtraTurn = true;
+            if (!IsPlayerTypeAssigned(playerTurn.Value)) hasExtraTurn.Value = true;
             else if (GetPlayerType(playerTurn.Value) == "StripedBall")
             {
-                hasExtraTurn = true;
+                hasExtraTurn.Value = true;
             }
         }
         else if (ball.CompareTag("SolidBall"))
@@ -259,16 +530,16 @@ public class GameManager : NetworkBehaviour
                 AssignPlayerType("SolidBall");
             }
 
-            if (!IsPlayerTypeAssigned(playerTurn.Value)) hasExtraTurn = true;
+            if (!IsPlayerTypeAssigned(playerTurn.Value)) hasExtraTurn.Value = true;
             else if (GetPlayerType(playerTurn.Value) == "SolidBall")
             {
-                hasExtraTurn = true;
+                hasExtraTurn.Value = true;
             }
         }
         else if (ball.CompareTag("CueBall"))
         {
             cueBallPocketed = true;
-            freeBall = true;
+            SetFreeBallServerRpc(true);
         }
         else if (ball == eightBall)
         {
@@ -279,7 +550,8 @@ public class GameManager : NetworkBehaviour
 
     bool IsPlayerTypeAssigned(int playerId)
     {
-        return GetPlayerType(playerId) != null;
+        var type = GetPlayerType(playerId);
+        return !string.IsNullOrEmpty(type);
     }
 
     void AssignPlayerType(string ballType)
@@ -288,14 +560,21 @@ public class GameManager : NetworkBehaviour
 
         int currentPlayer = playerTurn.Value;
         int otherPlayer = currentPlayer == 1 ? 2 : 1;
-        string otherBallType = ballType == "SolidBall" ? "StripedBall" : "SolidBall";
+        FixedString32Bytes playerBallType = ballType;
+        FixedString32Bytes otherBallType = ballType == "SolidBall" ? "StripedBall" : "SolidBall";
 
-        // NetworkList 초기화
-        playerTypes.Clear();
-        playerTypes.Add(new PlayerType { playerId = currentPlayer, type = ballType });
-        playerTypes.Add(new PlayerType { playerId = otherPlayer, type = otherBallType });
+        if (currentPlayer == 1)
+        {
+            player1Type.Value = playerBallType;
+            player2Type.Value = otherBallType;
+        }
+        else
+        {
+            player2Type.Value = playerBallType;
+            player1Type.Value = otherBallType;
+        }
 
-        Debug.Log($"Player {currentPlayer} is assigned {ballType}");
+        Debug.Log($"Player {currentPlayer} is assigned {playerBallType}");
         Debug.Log($"Player {otherPlayer} is assigned {otherBallType}");
     }
 
@@ -342,27 +621,26 @@ public class GameManager : NetworkBehaviour
         Debug.Log($"Player {winnerPlayer} Wins!");
         DataManager.Instance.WinnerName = winnerPlayer;
         // 씬 전환 등 필요한 작업 수행
-        // sceneLoader.ChangeScene("end");
+        sceneLoader.ChangeScene("end");
     }
 
     void TurnChange()
     {
         if (cueBallPocketed)
         {
-            // 상대방에게 프리볼 부여
-            freeBall = true;
+            SetFreeBallServerRpc(true);
         }
 
-        if (!hasExtraTurn)
+        if (!hasExtraTurn.Value)
         {
             // 턴 변경
             playerTurn.Value = playerTurn.Value == 1 ? 2 : 1;
-            // 클라이언트에게 턴 변경 알림
+            AssignCueOwnership();
             NotifyTurnChangedClientRpc(playerTurn.Value);
         }
         else
         {
-            hasExtraTurn = false;
+            hasExtraTurn.Value = false;
         }
 
         // 다음 턴을 위해 변수 초기화
@@ -385,7 +663,7 @@ public class GameManager : NetworkBehaviour
         if (cueBallPocketed)
         {
             isFirstTime = false;
-            hasExtraTurn = false; // 추가 턴 없음
+            hasExtraTurn.Value = false; // 추가 턴 없음
             TurnChange();
             return;
         }
@@ -394,7 +672,7 @@ public class GameManager : NetworkBehaviour
         if (pocketedBallsThisTurn.Count == 0)
         {
             isFirstTime = false;
-            hasExtraTurn = false;
+            hasExtraTurn.Value = false;
             TurnChange();
             return;
         }
@@ -411,7 +689,7 @@ public class GameManager : NetworkBehaviour
             // 자신의 공이 아닌 공을 포켓했을 경우
             if (pocketedBallsThisTurn.Any(ball => ball.CompareTag(GetOpponentType(playerTurn.Value))))
             {
-                hasExtraTurn = false;
+                hasExtraTurn.Value = false;
                 TurnChange();
                 return;
             }
@@ -419,13 +697,13 @@ public class GameManager : NetworkBehaviour
 
         isFirstTime = false;
         // 추가 턴 여부에 따라 턴 변경
-        if (!hasExtraTurn)
+        if (!hasExtraTurn.Value)
         {
             TurnChange();
         }
         else
         {
-            hasExtraTurn = false;
+            hasExtraTurn.Value = false;
             pocketedBallsThisTurn.Clear();
         }
 
@@ -447,17 +725,17 @@ public class GameManager : NetworkBehaviour
         if (solidPocketed > 0 && stripedPocketed == 0)
         {
             AssignPlayerType("SolidBall");
-            hasExtraTurn = true;
+            hasExtraTurn.Value = true;
         }
         else if (stripedPocketed > 0 && solidPocketed == 0)
         {
             AssignPlayerType("StripedBall");
-            hasExtraTurn = true;
+            hasExtraTurn.Value = true;
         }
         else
         {
             // 둘 다 넣었거나 아무것도 넣지 않았을 경우 턴 변경
-            hasExtraTurn = false;
+            hasExtraTurn.Value = false;
             TurnChange();
         }
     }
@@ -477,12 +755,37 @@ public class GameManager : NetworkBehaviour
         base.OnDestroy();
     }
 
-    private void OnGUI()
+    //private void OnGUI()
+    //{
+    //    GUI.Label(new Rect(10, 170, 250, 20), $"Ball Count - Solid: {solidCount.Value}, Striped: {stripedCount.Value}");
+    //    GUI.Label(new Rect(10, 190, 250, 20), $"Player {playerTurn.Value}'s Turn");
+    //    GUI.Label(new Rect(10, 210, 250, 20), $"Player 1 Type: {GetPlayerType(1) ?? "Not Assigned"}");
+    //    GUI.Label(new Rect(10, 230, 250, 20), $"Player 2 Type: {GetPlayerType(2) ?? "Not Assigned"}");
+    //    GUI.Label(new Rect(10, 250, 250, 20), $"isFirst: {isFirstTime}");
+    //}
+
+    [ServerRpc]
+    public void SetFreeBallServerRpc(bool value)
     {
-        GUI.Label(new Rect(10, 170, 250, 20), $"Ball Count - Solid: {solidCount.Value}, Striped: {stripedCount.Value}");
-        GUI.Label(new Rect(10, 190, 250, 20), $"Player {playerTurn.Value}'s Turn");
-        GUI.Label(new Rect(10, 210, 250, 20), $"Player 1 Type: {GetPlayerType(1) ?? "Not Assigned"}");
-        GUI.Label(new Rect(10, 230, 250, 20), $"Player 2 Type: {GetPlayerType(2) ?? "Not Assigned"}");
-        GUI.Label(new Rect(10, 250, 250, 20), $"isFirst: {isFirstTime}");
+        freeBall.Value = value;
+    }
+
+    [ServerRpc]
+    public void SethasExtraTurnServerRpc(bool v)
+    {
+        hasExtraTurn.Value = v;
+    }
+
+    private void AssignCueOwnership()
+    {
+        if (players.Count == 0)
+        {
+            Debug.LogWarning("No players connected.");
+            return;
+        }
+
+        ulong currentPlayerId = players[playerTurn.Value-1];
+        cueNetworkObject.ChangeOwnership(currentPlayerId);
+        Debug.Log($"Cue ownership changed to player {currentPlayerId}");
     }
 }
