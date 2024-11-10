@@ -9,7 +9,7 @@ public class UIController : MonoBehaviour
     public TextMeshProUGUI turnText;
     public TextMeshProUGUI score;
 
-    void OnEnable()
+    private void Start()
     {
         if (GameManager.Instance != null)
         {
@@ -33,9 +33,9 @@ public class UIController : MonoBehaviour
 
     private void UpdateTurnText(int turnIndex)
     {
-        if (GameManager.Instance.players.Count > turnIndex)
+        if (GameManager.Instance.players.Count >= turnIndex)
         {
-            ulong playerId = GameManager.Instance.players[turnIndex];
+            ulong playerId = GameManager.Instance.players[turnIndex-1];
             string playerName = GetPlayerName(playerId);
             turnText.text = $"Turn: Player {playerName}";
         }
@@ -47,7 +47,6 @@ public class UIController : MonoBehaviour
 
     private string GetPlayerName(ulong playerId)
     {
-        // 예시: PlayerObject에 PlayerName 컴포넌트가 있다고 가정
         if (NetworkManager.Singleton.ConnectedClients.TryGetValue(playerId, out var client))
         {
             if (client.PlayerObject != null)

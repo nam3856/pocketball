@@ -32,7 +32,6 @@ public class CueController : NetworkBehaviour
     public LayerMask cueBallLayerMask;
     public GameObject Box;
     public event Action OnHitBall;
-    private NetworkObject parentNetworkObject;
 
     private float cueOffset = -0.1f; // 큐볼에서 큐대까지의 거리
 
@@ -40,30 +39,20 @@ public class CueController : NetworkBehaviour
     {
         gameManager = FindObjectOfType<GameManager>();
         cameraController = FindObjectOfType<CameraController>();
-
-        parentNetworkObject = GetComponentInParent<NetworkObject>();
-
-        if (parentNetworkObject == null)
-        {
-            Debug.LogError("Parent NetworkObject not found!");
-            return;
-        }
     }
 
     void Update()
     {
-        if (!parentNetworkObject.IsOwner)
+        if (!IsOwner)
         {
-            Debug.Log("Not Owner, return");
             return;
         }
-
         int myPlayerNumber = GameManager.Instance.GetMyPlayerNumber();
         if (GameManager.Instance.playerTurn.Value != myPlayerNumber)
         {
-            Debug.Log($"Current Player Turn = {GameManager.Instance.playerTurn.Value}, You = {myPlayerNumber}");
             return;
         }
+
         // 프리볼 상태 처리
         if (gameManager.freeBall.Value && !gameManager.ballsAreMoving.Value)
         {
@@ -81,7 +70,10 @@ public class CueController : NetworkBehaviour
 
         // 마우스 위치를 가져옴
         mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-        mousePos.y = CueBall.position.y;
+        mousePos.y = 0.33f;
+#if !UNITY_EDITOR
+        Debug.LogError($"{mousePos}");
+#endif
 
         // 큐 방향이 고정되지 않았다면 마우스 위치로 큐 방향 설정
         if (!isDirectionFixed)
@@ -93,7 +85,10 @@ public class CueController : NetworkBehaviour
 
             // 큐의 회전 및 위치 설정
             Cue.transform.rotation = Quaternion.LookRotation(CueDirection);
+            
             Cue.transform.position = CueBall.position + CueDirection * cueOffset;
+            Cue.transform.position = new Vector3(Cue.transform.position.x, Cue.transform.position.y, Cue.transform.position.z);
+
         }
         else // 큐 방향이 고정되었을 때
         {
@@ -118,7 +113,7 @@ public class CueController : NetworkBehaviour
                 power = Mathf.Clamp(power, minPower, maxPower);
 
                 // 큐와 공 사이의 거리 조절
-                cueOffset = Mathf.Clamp(-power/8, -maxPower/8, -minPower);
+                cueOffset = Mathf.Clamp(power/8, minPower, maxPower / 8);
                 Cue.transform.position = CueBall.position + CueDirection * cueOffset;
             }
 
@@ -139,6 +134,8 @@ public class CueController : NetworkBehaviour
     [ServerRpc]
     void RequestShootServerRpc(Vector3 direction, float power, Vector2 hitPoint)
     {
+        if (!IsOwner)
+            return;
         // 입력 검증...
 
         // 큐볼에 힘 적용
@@ -153,7 +150,7 @@ public class CueController : NetworkBehaviour
     [ClientRpc]
     void ApplyShootClientRpc(Vector3 direction, float power, Vector2 hitPoint)
     {
-        if (parentNetworkObject.IsOwner)
+        if (IsOwner)
             return;
 
         // 로컬에서 샷 적용
@@ -236,7 +233,7 @@ public class CueController : NetworkBehaviour
         float startTime = Time.time;
 
         Vector3 startPosition = Cue.transform.position;
-        float cueOffsetAfterHit = -0.5f; // 타격 후 큐대 위치
+        float cueOffsetAfterHit = 0.5f; // 타격 후 큐대 위치
         Vector3 endPosition = CueBall.position + CueDirection * cueOffsetAfterHit;
 
         while (Time.time - startTime < animTime)

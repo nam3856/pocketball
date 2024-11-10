@@ -18,7 +18,7 @@ public class CueBallController : NetworkBehaviour
         if (!IsServer)
             return;
         // 방향 벡터 정규화
-        direction = direction.normalized;
+        direction = -direction.normalized;
 
         // 큐대가 바라보는 방향으로 힘을 적용 (선형 운동)
         CueBallRigidbody.AddForce(direction * power, ForceMode.Impulse);

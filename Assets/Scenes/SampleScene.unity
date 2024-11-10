@@ -8060,15 +8060,27 @@ PrefabInstance:
     - target: {fileID: 4432376546548760811, guid: ea255119024168a4c87dd3f110418f75, type: 3}
       propertyPath: cuePrefab
       value: 
-      objectReference: {fileID: 8572251968203255563, guid: 7f44462ae420d41469f10b76e9754416, type: 3}
+      objectReference: {fileID: 7994333228857099580, guid: 4c633136d6b82b44589b1150baa0f483, type: 3}
     - target: {fileID: 4432376546548760811, guid: ea255119024168a4c87dd3f110418f75, type: 3}
       propertyPath: sceneLoader
       value: 
       objectReference: {fileID: 82080414}
     - target: {fileID: 4432376546548760811, guid: ea255119024168a4c87dd3f110418f75, type: 3}
+      propertyPath: cueController
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 4432376546548760811, guid: ea255119024168a4c87dd3f110418f75, type: 3}
+      propertyPath: solidBallPrefab
+      value: 
+      objectReference: {fileID: 4766902699098221353, guid: f17171bbed3390f44b4a35f1e4d68ab3, type: 3}
+    - target: {fileID: 4432376546548760811, guid: ea255119024168a4c87dd3f110418f75, type: 3}
       propertyPath: triangleSpacing
       value: 0.66
       objectReference: {fileID: 0}
+    - target: {fileID: 4432376546548760811, guid: ea255119024168a4c87dd3f110418f75, type: 3}
+      propertyPath: stripedBallPrefab
+      value: 
+      objectReference: {fileID: 2523690204137293108, guid: b650bb5b0587a794287ebe2c8aba8282, type: 3}
     - target: {fileID: 4432376546548760811, guid: ea255119024168a4c87dd3f110418f75, type: 3}
       propertyPath: solidBallPrefabs.Array.size
       value: 1

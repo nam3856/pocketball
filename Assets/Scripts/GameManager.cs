@@ -11,43 +11,40 @@ using UnityEngine;
 public class GameManager : NetworkBehaviour
 {
     public static GameManager Instance { get; private set; }
+
+    [Header("Player Information")]
     public List<ulong> players = new List<ulong>();
-    public List<BallController> ballControllers = new List<BallController>();
-
-    public GameObject eightBall;
-    public CueController cueController;
-    public SceneLoader sceneLoader;
-
-    public NetworkVariable<int> solidCount = new NetworkVariable<int>(7);
-    public NetworkVariable<int> stripedCount = new NetworkVariable<int>(7);
+    public NetworkVariable<ulong> player1ClientId = new NetworkVariable<ulong>();
+    public NetworkVariable<ulong> player2ClientId = new NetworkVariable<ulong>();
     public NetworkVariable<int> playerTurn = new NetworkVariable<int>(1);
     private NetworkVariable<int> winner = new NetworkVariable<int>(0);
     public NetworkVariable<FixedString32Bytes> player1Type = new NetworkVariable<FixedString32Bytes>();
     public NetworkVariable<FixedString32Bytes> player2Type = new NetworkVariable<FixedString32Bytes>();
 
-    public NetworkVariable<ulong> player1ClientId = new NetworkVariable<ulong>();
-    public NetworkVariable<ulong> player2ClientId = new NetworkVariable<ulong>();
+    [Header("Game Objects & Controllers")]
+    public GameObject cuePrefab;
+    public GameObject cueBallPrefab;
+    public GameObject ball1Prefab; // 1번 공
+    public GameObject ball8Prefab; // 1번 공
+    public GameObject eightBall; // 8번 공
+    public GameObject stripedBallPrefab; // 줄무늬 공 프리팹 리스트
+    public GameObject solidBallPrefab; // 단색 공 프리팹 리스트
+    public CueController cueController;
+    private CueBallController cueBallController;
+    public SceneLoader sceneLoader;
+    private GameObject cue;
+    private GameObject cueBall;
+    private NetworkObject cueNetworkObject;
+    public List<BallController> ballControllers = new List<BallController>();
 
+    [Header("Network Variables")]
+    public NetworkVariable<int> solidCount = new NetworkVariable<int>(7);
+    public NetworkVariable<int> stripedCount = new NetworkVariable<int>(7);
+    public NetworkVariable<NetworkObjectReference> cueReference = new NetworkVariable<NetworkObjectReference>();
+    public NetworkVariable<NetworkObjectReference> cueBallReference = new NetworkVariable<NetworkObjectReference>();
     public NetworkVariable<bool> hasExtraTurn = new NetworkVariable<bool>(false);
     public NetworkVariable<bool> freeBall = new NetworkVariable<bool>(false);
     public NetworkVariable<bool> ballsAreMoving = new NetworkVariable<bool>(false);
-
-    private bool isTypeAssigned = false;
-    private bool isFirstTime = true;
-    private List<GameObject> pocketedBallsThisTurn = new List<GameObject>();
-    private bool cueBallPocketed = false;
-    private CancellationTokenSource movementCheckCancellationTokenSource;
-    private int currentTurnIndex = 0; // 현재 턴 인덱스
-    private NetworkObject cueNetworkObject;
-
-    GameObject Cue;
-    public GameObject cuePrefab;
-    [Header("Ball Prefabs")]
-    public GameObject cueBallPrefab;
-    public GameObject ball1Prefab; // 1번 공
-    public GameObject ball8Prefab; // 8번 공
-    public List<GameObject> stripedBallPrefabs; // 줄무늬 공 프리팹 리스트
-    public List<GameObject> solidBallPrefabs; // 단색 공 프리팹 리스트
 
     [Header("Table Boundaries")]
     private Vector3 tableLeftEnd = new Vector3(-7.8f, 0.33f, 0f);
@@ -56,6 +53,14 @@ public class GameManager : NetworkBehaviour
     [Header("Ball Settings")]
     public float ballRadius = 0.32f;
     public float triangleSpacing = 0.66f;
+
+    // Private Variables
+    private bool isTypeAssigned = false;
+    private bool isFirstTime = true;
+    private List<GameObject> pocketedBallsThisTurn = new List<GameObject>();
+    private bool cueBallPocketed = false;
+    private CancellationTokenSource movementCheckCancellationTokenSource;
+    private List<Material> usedMaterials = new List<Material>();
     private void OnClientConnected(ulong clientId)
     {
         if (!players.Contains(clientId))
@@ -92,16 +97,15 @@ public class GameManager : NetworkBehaviour
         }
         else
         {
-            Debug.LogWarning("GameManager: 클라이언트는 게임을 시작할 수 없습니다.");
         }
     }
-
     private void SpawnCue()
     {
-        Cue = Instantiate(cuePrefab, Vector3.zero, Quaternion.identity);
-        cueNetworkObject = Cue.GetComponent<NetworkObject>();
+        cue = Instantiate(cuePrefab, Vector3.zero, Quaternion.identity);
+        cueNetworkObject = cue.GetComponent<NetworkObject>();
         cueNetworkObject.Spawn();
-        cueController = Cue.GetComponentInChildren<CueController>();
+        cueController = cue.GetComponent<CueController>();
+        cueReference.Value = new NetworkObjectReference(cueNetworkObject);
         HitPointIndicatorController hitPointIndicator = FindObjectOfType<HitPointIndicatorController>();
         if (hitPointIndicator != null)
         {
@@ -131,6 +135,24 @@ public class GameManager : NetworkBehaviour
         {
             freeBall.OnValueChanged += HandleFreeBallChange;
             ballsAreMoving.OnValueChanged += HandleBallsMovingChange;
+            cueReference.OnValueChanged += (previousValue, newValue) =>
+            {
+                if (newValue.TryGet(out NetworkObject cueNetworkObject))
+                {
+                    cue = cueNetworkObject.gameObject;
+                    cueController = cue.GetComponent<CueController>();
+                }
+            };
+            cueBallReference.OnValueChanged += (previousValue, newValue) =>
+            {
+                if (newValue.TryGet(out NetworkObject cueBallNetworkObject))
+                {
+                    cueBall = cueBallNetworkObject.gameObject;
+                    cueBallController = cueBall.GetComponent<CueBallController>();
+                    cueController.CueBall = cueBall.transform;
+                    cueController.cueBallController = cueBallController;
+                }
+            };
         }
     }
 
@@ -159,9 +181,9 @@ public class GameManager : NetworkBehaviour
     {
         // 1. 큐볼 스폰 (왼쪽 끝)
         Vector3 cueBallPosition = CalculateCueBallPosition();
-        GameObject cueBall = Instantiate(cueBallPrefab, cueBallPosition, Quaternion.identity);
+        cueBall = Instantiate(cueBallPrefab, cueBallPosition, Quaternion.identity);
         cueBall.GetComponent<NetworkObject>().Spawn();
-        CueBallController cueBallController = cueBall.GetComponent<CueBallController>();
+        cueBallController = cueBall.GetComponent<CueBallController>();
         cueBallController.cueController = cueController;
         cueController.CueBall = cueBall.transform;
         cueController.cueBallController = cueBallController;
@@ -188,7 +210,6 @@ public class GameManager : NetworkBehaviour
         int currentBallIndex = 1;
         int rowCount = 1;
         List<GameObject> spawnedBalls = new List<GameObject>();
-        List<Material> usedMaterials = new List<Material>();
 
         // 1번 줄 - 1번 공
         GameObject num1Ball = Instantiate(ball1Prefab, GetPositionInTriangle(triangleOrigin, tableDirection, perpendicular, rowCount++, 0), Quaternion.identity);
@@ -208,35 +229,56 @@ public class GameManager : NetworkBehaviour
 
         foreach (var ball in spawnedBalls)
         {
-            ball.GetComponent<NetworkObject>().Spawn();
+            if (!ball.GetComponent<NetworkObject>().IsSpawned)
+            {
+                ball.GetComponent<NetworkObject>().Spawn();
+            }
             ball.transform.rotation = Quaternion.Euler(90f, 0, 0);
             if (currentBallIndex == 7) currentBallIndex++;
 
-            // 1번 공과 8번 공이 아닌 경우에만 머티리얼과 번호 부여
             BallController ballController = ball.GetComponent<BallController>();
-            
+
             string materialPath = "";
             if (ball.tag == "StripedBall")
             {
                 // 줄무늬 공에서 사용되지 않은 머티리얼 선택
-                var availableMaterials = Enumerable.Range(9, 7).Where(i => !usedMaterials.Any(m => m.name == $"Ball{i:D2}"));
+                var availableMaterials = Enumerable.Range(9, 7)
+                    .Where(i => !usedMaterials.Any(m => m.name == $"Ball{i:D2}"))
+                    .ToList();
+
                 if (availableMaterials.Any())
                 {
-                    int materialIndex = availableMaterials.ElementAt(UnityEngine.Random.Range(0, availableMaterials.Count()));
+                    int materialIndex = availableMaterials[UnityEngine.Random.Range(0, availableMaterials.Count)];
                     materialPath = $"Materials/Ball{materialIndex:D2}";
+                    // 사용된 머티리얼 추가
+                    Material material = Resources.Load<Material>(materialPath);
+                    if (material != null)
+                    {
+                        usedMaterials.Add(material);
+                    }
                 }
             }
             else // Solid Ball
             {
                 // 단색 공에서 사용되지 않은 머티리얼 선택
-                var availableMaterials = Enumerable.Range(2, 6).Where(i => !usedMaterials.Any(m => m.name == $"Ball{i:D2}"));
+                var availableMaterials = Enumerable.Range(2, 6)
+                    .Where(i => !usedMaterials.Any(m => m.name == $"Ball{i:D2}"))
+                    .ToList();
+
                 if (availableMaterials.Any())
                 {
-                    int materialIndex = availableMaterials.ElementAt(UnityEngine.Random.Range(0, availableMaterials.Count()));
+                    int materialIndex = availableMaterials[UnityEngine.Random.Range(0, availableMaterials.Count)];
                     materialPath = $"Materials/Ball{materialIndex:D2}";
+                    // 사용된 머티리얼 추가
+                    Material material = Resources.Load<Material>(materialPath);
+                    if (material != null)
+                    {
+                        usedMaterials.Add(material);
+                    }
                 }
             }
 
+            Debug.Log(materialPath);
             if (!string.IsNullOrEmpty(materialPath))
             {
                 NetworkObjectReference networkObjectReference = new NetworkObjectReference(ball.GetComponent<NetworkObject>());
@@ -246,7 +288,6 @@ public class GameManager : NetworkBehaviour
             ballController.ballNumber = currentBallIndex + 1;
             ballController.BallRigidbody = ball.GetComponent<Rigidbody>();
             ballControllers.Add(ballController);
-
 
             currentBallIndex++;
         }
@@ -267,14 +308,14 @@ public class GameManager : NetworkBehaviour
             if (i == skipIndex)
             {
                 Vector3 position = GetPositionInTriangle(origin, direction, perpendicular, row, i + 1);
-                GameObject prefab = GetRandomBallPrefab(types[i]);
+                GameObject prefab = GetBallPrefabType(types[i]);
                 GameObject ball = Instantiate(prefab, position, Quaternion.identity);
                 spawnedBalls.Add(ball);
             }
             else
             {
                 Vector3 position = GetPositionInTriangle(origin, direction, perpendicular, row, i);
-                GameObject prefab = GetRandomBallPrefab(types[i]);
+                GameObject prefab = GetBallPrefabType(types[i]);
                 GameObject ball = Instantiate(prefab, position, Quaternion.identity);
                 spawnedBalls.Add(ball);
             }
@@ -288,15 +329,15 @@ public class GameManager : NetworkBehaviour
         return rowStart + perpendicular * ((index - (row - 1) / 2.0f) * triangleSpacing);
     }
 
-    private GameObject GetRandomBallPrefab(string type)
+    private GameObject GetBallPrefabType(string type)
     {
         if (type == "striped")
         {
-            return stripedBallPrefabs[UnityEngine.Random.Range(0, stripedBallPrefabs.Count)];
+            return stripedBallPrefab;
         }
-        else // solid
+        else
         {
-            return solidBallPrefabs[UnityEngine.Random.Range(0, solidBallPrefabs.Count)];
+            return solidBallPrefab;
         }
     }
 
@@ -401,9 +442,9 @@ public class GameManager : NetworkBehaviour
     {
         ulong myClientId = NetworkManager.Singleton.LocalClientId;
         if (player1ClientId.Value == myClientId)
-            return 1;
-        else if (player2ClientId.Value == myClientId)
             return 2;
+        else if (player2ClientId.Value == myClientId)
+            return 1;
         else
             return 0; // 할당되지 않음
     }
