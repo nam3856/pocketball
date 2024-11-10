@@ -36,6 +36,7 @@ public class GameManager : NetworkBehaviour
     private GameObject cueBall;
     private NetworkObject cueNetworkObject;
     public List<BallController> ballControllers = new List<BallController>();
+    public List<NetworkObject> spawnedNetworkBalls = new List<NetworkObject>();
 
     [Header("Network Variables")]
     public NetworkVariable<int> solidCount = new NetworkVariable<int>(7);
@@ -93,7 +94,7 @@ public class GameManager : NetworkBehaviour
             Debug.Log("GameManager: 게임 시작");
             SpawnCue();
             SpawnBalls();
-            AssignCueOwnership();
+            AssignCueOwnershipServerRpc();
         }
         else
         {
@@ -189,6 +190,7 @@ public class GameManager : NetworkBehaviour
         cueController.cueBallController = cueBallController;
         cueController.hitPointIndicator = GameObject.Find("Canvas/aboutHit/HitIndicator").transform;
         ballControllers.Add(cueBall.GetComponent<BallController>());
+        spawnedNetworkBalls.Add(cueBall.GetComponent<NetworkObject>());
         Debug.Log($"CueBall spawned at: {cueBallPosition}");
 
         // 2. 삼각형 형태로 15개의 공 스폰 (오른쪽 끝)
@@ -232,6 +234,7 @@ public class GameManager : NetworkBehaviour
             if (!ball.GetComponent<NetworkObject>().IsSpawned)
             {
                 ball.GetComponent<NetworkObject>().Spawn();
+                spawnedNetworkBalls.Add(ball.GetComponent<NetworkObject>());
             }
             ball.transform.rotation = Quaternion.Euler(90f, 0, 0);
             if (currentBallIndex == 7) currentBallIndex++;
@@ -435,7 +438,11 @@ public class GameManager : NetworkBehaviour
 
     private void OnPlayerTurnChanged(int previousValue, int newValue)
     {
-        
+        if (freeBall.Value)
+        {
+            cueBallController.StartFreeBallPlacement(newValue).Forget();
+        }
+        cueController.StartCueControlAsync().Forget();
     }
 
     public int GetMyPlayerNumber()
@@ -476,9 +483,45 @@ public class GameManager : NetworkBehaviour
         }
         foreach (BallController ball in ballControllers)
         {
-            ball.BallRigidbody.velocity = Vector3.zero;
+            ball.BallRigidbody.constraints = RigidbodyConstraints.FreezePosition;
         }
         return true;
+    }
+    [ServerRpc]
+    public void HitConfirmedServerRpc()
+    {
+        foreach (var ball in spawnedNetworkBalls)
+        {
+            NetworkObjectReference ballReference = new NetworkObjectReference(ball);
+            SetRigidbodyConstraintsServerRpc(ballReference);
+        }
+    }
+
+    [ServerRpc]
+    public void SetRigidbodyConstraintsServerRpc(NetworkObjectReference objectReference)
+    {
+        if (objectReference.TryGet(out NetworkObject networkObject))
+        {
+            Rigidbody rb = networkObject.GetComponent<Rigidbody>();
+            if (rb != null)
+            {
+                rb.constraints = RigidbodyConstraints.None;
+
+                SetRigidbodyConstraintsClientRpc(objectReference);
+            }
+        }
+    }
+    [ClientRpc]
+    public void SetRigidbodyConstraintsClientRpc(NetworkObjectReference objectReference)
+    {
+        if (objectReference.TryGet(out NetworkObject networkObject))
+        {
+            Rigidbody rb = networkObject.GetComponent<Rigidbody>();
+            if (rb != null)
+            {
+                rb.constraints = RigidbodyConstraints.None;
+            }
+        }
     }
 
     public async UniTaskVoid CheckBallsMovementAsync()
@@ -676,7 +719,7 @@ public class GameManager : NetworkBehaviour
         {
             // 턴 변경
             playerTurn.Value = playerTurn.Value == 1 ? 2 : 1;
-            AssignCueOwnership();
+            AssignCueOwnershipServerRpc();
             NotifyTurnChangedClientRpc(playerTurn.Value);
         }
         else
@@ -817,7 +860,8 @@ public class GameManager : NetworkBehaviour
         hasExtraTurn.Value = v;
     }
 
-    private void AssignCueOwnership()
+    [ServerRpc]
+    private void AssignCueOwnershipServerRpc()
     {
         if (players.Count == 0)
         {

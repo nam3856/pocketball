@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using UnityEngine;
 using Unity.Netcode;
+using Cysharp.Threading.Tasks;
 public class CueController : NetworkBehaviour
 {
     private Vector3 mousePos;
@@ -21,16 +22,11 @@ public class CueController : NetworkBehaviour
 
     private GameManager gameManager;
 
-    private float tableMinX = -7.5f;
-    private float tableMaxX = 7.5f;
-    private float tableMinZ = -3.3f;
-    private float tableMaxZ = 3.3f;
 
     public CameraController cameraController;
     private Vector2 hitPoint = Vector2.zero;
     public Transform hitPointIndicator;
     public LayerMask cueBallLayerMask;
-    public GameObject Box;
     public event Action OnHitBall;
 
     private float cueOffset = -0.1f; // 큐볼에서 큐대까지의 거리
@@ -41,96 +37,104 @@ public class CueController : NetworkBehaviour
         cameraController = FindObjectOfType<CameraController>();
     }
 
-    void Update()
+
+
+    public async UniTaskVoid StartCueControlAsync()
     {
-        if (!IsOwner)
+        isCueControlActive = true;
+        if (GameManager.Instance.GetMyPlayerNumber() != GameManager.Instance.playerTurn.Value) return;
+        while (!GameManager.Instance.freeBall.Value)
         {
-            return;
+            await UniTask.Yield();
         }
-        int myPlayerNumber = GameManager.Instance.GetMyPlayerNumber();
-        if (GameManager.Instance.playerTurn.Value != myPlayerNumber)
+        while (isCueControlActive)
         {
-            return;
+            if (!isDirectionFixed)
+            {
+                FollowMousePointer();
+            }
+            else
+            {
+                SetDirectionAndPower();
+            }
+            await UniTask.Yield();
         }
+    }
 
-        // 프리볼 상태 처리
-        if (gameManager.freeBall.Value && !gameManager.ballsAreMoving.Value)
-        {
-            HandleFreeBallPlacement();
-            return;
-        }
+    public void StopCueControl()
+    {
+        isCueControlActive = false;
+    }
 
-        // 모든 공이 멈췄는지 확인
-        if (gameManager.ballsAreMoving.Value)
-        {
-            isDirectionFixed = false;
-            return;
-        }
-        if (isHitting) return;
+    private bool isCueControlActive = false;
 
+    public void FollowMousePointer()
+    {
+        if (!IsOwner) return;
         // 마우스 위치를 가져옴
         mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
         mousePos.y = 0.33f;
-#if !UNITY_EDITOR
-        Debug.LogError($"{mousePos}");
-#endif
 
-        // 큐 방향이 고정되지 않았다면 마우스 위치로 큐 방향 설정
-        if (!isDirectionFixed)
-        {
-            Vector3 targetDir = (mousePos - CueBall.position).normalized;
-            angle = Mathf.Atan2(targetDir.x, targetDir.z) * Mathf.Rad2Deg;
-            Quaternion rotation = Quaternion.Euler(0, angle, 0);
-            CueDirection = rotation * Vector3.forward;
+        Vector3 targetDir = (mousePos - CueBall.position).normalized;
+        angle = Mathf.Atan2(targetDir.x, targetDir.z) * Mathf.Rad2Deg;
+        Quaternion rotation = Quaternion.Euler(0, angle, 0);
+        CueDirection = rotation * Vector3.forward;
 
-            // 큐의 회전 및 위치 설정
-            Cue.transform.rotation = Quaternion.LookRotation(CueDirection);
-            
-            Cue.transform.position = CueBall.position + CueDirection * cueOffset;
-            Cue.transform.position = new Vector3(Cue.transform.position.x, Cue.transform.position.y, Cue.transform.position.z);
+        // 큐의 회전 및 위치 설정
+        Cue.transform.rotation = Quaternion.LookRotation(CueDirection);
+        Cue.transform.position = CueBall.position + CueDirection * cueOffset;
+        Cue.transform.position = new Vector3(Cue.transform.position.x, Cue.transform.position.y, Cue.transform.position.z);
 
-        }
-        else // 큐 방향이 고정되었을 때
-        {
-            // 좌우 방향키로 각도 조절
-            float horizontalInput = Input.GetAxis("Horizontal");
-            if (horizontalInput != 0)
-            {
-                angle += horizontalInput * angleAdjustmentSpeed * Time.deltaTime;
-                Quaternion rotation = Quaternion.Euler(0, angle, 0);
-                CueDirection = rotation * Vector3.forward;
-
-                // 큐의 회전 및 위치 업데이트
-                Cue.transform.rotation = Quaternion.LookRotation(CueDirection);
-                Cue.transform.position = CueBall.position + CueDirection * cueOffset;
-            }
-
-            // 상하 방향키로 파워 조절
-            float verticalInput = Input.GetAxis("Vertical");
-            if (verticalInput != 0)
-            {
-                power += verticalInput * Time.deltaTime*8;
-                power = Mathf.Clamp(power, minPower, maxPower);
-
-                // 큐와 공 사이의 거리 조절
-                cueOffset = Mathf.Clamp(power/8, minPower, maxPower / 8);
-                Cue.transform.position = CueBall.position + CueDirection * cueOffset;
-            }
-
-            // 스페이스바를 누르면 공을 침
-            if (Input.GetKeyDown(KeyCode.Space))
-            {
-                StartCoroutine(HitBall());
-                
-            }
-        }
-
-        // 마우스를 클릭하면 큐 방향 고정
-        if (Input.GetMouseButtonDown(0) && !isDirectionFixed)
+        // 마우스 왼쪽 버튼 클릭으로 방향을 고정
+        if (Input.GetMouseButtonDown(0))
         {
             isDirectionFixed = true;
         }
     }
+
+    void SetDirectionAndPower()
+    {
+        if (!IsOwner) return;
+        // 좌우 방향키로 각도 조절
+        float horizontalInput = Input.GetAxis("Horizontal");
+        if (horizontalInput != 0)
+        {
+            angle += horizontalInput * angleAdjustmentSpeed * Time.deltaTime;
+            Quaternion rotation = Quaternion.Euler(0, angle, 0);
+            CueDirection = rotation * Vector3.forward;
+
+            // 큐의 회전 및 위치 업데이트
+            Cue.transform.rotation = Quaternion.LookRotation(CueDirection);
+            Cue.transform.position = CueBall.position + CueDirection * cueOffset;
+        }
+
+        // 상하 방향키로 파워 조절
+        float verticalInput = Input.GetAxis("Vertical");
+        if (verticalInput != 0)
+        {
+            power += verticalInput * Time.deltaTime * 8;
+            power = Mathf.Clamp(power, minPower, maxPower);
+
+            // 큐와 공 사이의 거리 조절
+            cueOffset = Mathf.Clamp(power / 8, minPower, maxPower / 8);
+            Cue.transform.position = CueBall.position + CueDirection * cueOffset;
+        }
+
+        // 스페이스바를 누르면 공을 침
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            GameManager.Instance.HitConfirmedServerRpc();
+            StartCoroutine(HitBall());
+            isDirectionFixed = false;
+        }
+
+        // 마우스 왼쪽 버튼 클릭으로 방향 고정 해제
+        if (Input.GetMouseButtonDown(0))
+        {
+            isDirectionFixed = false;
+        }
+    }
+
     [ServerRpc]
     void RequestShootServerRpc(Vector3 direction, float power, Vector2 hitPoint)
     {
@@ -157,73 +161,7 @@ public class CueController : NetworkBehaviour
         cueBallController.HitBall(direction, power, hitPoint);
     }
 
-    void HandleFreeBallPlacement()
-    {
-        // 마우스 위치를 가져옴
-        Vector3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-        mousePos.y = CueBall.position.y;
-
-        // 마우스 위치를 테이블 영역 내로 제한
-        float xPos = Mathf.Clamp(mousePos.x, tableMinX, tableMaxX);
-        float zPos = Mathf.Clamp(mousePos.z, tableMinZ, tableMaxZ);
-        Vector3 newPosition = new Vector3(xPos, 0.3f, zPos);
-
-        // 해당 위치에 다른 공이 있는지 검사 (클라이언트에서 임시로 검사)
-        if (!IsPositionValid(newPosition))
-        {
-            return;
-        }
-
-        // 마우스 왼쪽 버튼 클릭 시 위치 확정
-        if (Input.GetMouseButtonDown(0))
-        {
-            // 서버에 큐볼 위치 변경 요청
-            RequestFreeBallPlacementServerRpc(newPosition);
-            // freeBall 상태 변경을 서버에 요청
-            gameManager.SetFreeBallServerRpc(false);
-        }
-    }
-
-
-    [ServerRpc]
-    void RequestFreeBallPlacementServerRpc(Vector3 newPosition)
-    {
-        // 해당 위치에 다른 공이 있는지 서버에서 검사
-        if (!IsPositionValidOnServer(newPosition))
-            return;
-
-        // 큐볼의 위치를 서버에서 변경
-        CueBall.position = newPosition;
-    }
-
-    bool IsPositionValidOnServer(Vector3 position)
-    {
-        float radius = 0.32f;
-        Collider[] colliders = Physics.OverlapSphere(position, radius);
-        foreach (Collider collider in colliders)
-        {
-            if (collider.gameObject != CueBall.gameObject && (collider.gameObject.CompareTag("SolidBall") || collider.gameObject.CompareTag("StripedBall") || collider.gameObject.CompareTag("EightBall")))
-            {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    bool IsPositionValid(Vector3 position)
-    {
-        float radius = 0.32f; // 공의 반지름 (필요에 따라 조정)
-        Collider[] colliders = Physics.OverlapSphere(position, radius);
-        foreach (Collider collider in colliders)
-        {
-            if (collider.gameObject != CueBall.gameObject && (collider.gameObject.CompareTag("SolidBall") || collider.gameObject.CompareTag("StripedBall") || collider.gameObject.CompareTag("EightBall")))
-            {
-                return false;
-            }
-        }
-        return true;
-    }
-
+    
     IEnumerator HitBall()
     {
         isHitting = true;
@@ -267,12 +205,12 @@ public class CueController : NetworkBehaviour
 
     public void ShowCue()
     {
-        Cue.GetComponentInChildren<MeshRenderer>().enabled = true;
+        Cue.GetComponent<MeshRenderer>().enabled = true;
     }
 
     public void HideCue()
     {
-        Cue.GetComponentInChildren<MeshRenderer>().enabled = false;
+        Cue.GetComponent<MeshRenderer>().enabled = false;
     }
 }
 

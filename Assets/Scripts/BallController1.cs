@@ -60,7 +60,7 @@ public class BallController : NetworkBehaviour
         {
             isOnTable = false;
             Debug.Log($"{name}ÀÌ ±¸¸Û¿¡ ºüÁü");
-            StartCoroutine(ByeBye(other));
+            StartCoroutine(ByeBye());
             gameManager.BallFell(gameObject);
         }
         if (other.CompareTag("Floor") && isOnTable)
@@ -105,13 +105,12 @@ public class BallController : NetworkBehaviour
     public bool IsBallStopped()
     {
         if (transform.position.y <= -1f) return true;
-        if (BallRigidbody.angularVelocity.magnitude < 1f && BallRigidbody.velocity.magnitude < 0.1f) BallRigidbody.angularVelocity = Vector2.zero;
         return BallRigidbody.velocity.magnitude < 0.1f && BallRigidbody.angularVelocity.magnitude < 0.1f;
     }
 
-    private IEnumerator ByeBye(Collider other)
+    private IEnumerator ByeBye()
     {
-        int index = UnityEngine.Random.Range(0, BallFall.Length);
+        int index = Random.Range(0, BallFall.Length);
         BallClip = BallFall[index];
         PlayBallFallAudioClientRpc(index);
         yield return new WaitForSeconds(0.3f);
