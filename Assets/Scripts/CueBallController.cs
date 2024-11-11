@@ -17,6 +17,7 @@ public class CueBallController : NetworkBehaviour
     private void Start()
     {
         audioSource = GetComponent<AudioSource>();
+        cueBallRigidbody = GetComponent<Rigidbody>();
     }
 
     public void HitBall(Vector3 direction, float power, Vector2 hitPoint)

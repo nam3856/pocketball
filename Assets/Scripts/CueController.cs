@@ -35,15 +35,24 @@ public class CueController : NetworkBehaviour
     {
         gameManager = FindObjectOfType<GameManager>();
         cameraController = FindObjectOfType<CameraController>();
-    }
 
+        HitPointIndicatorController hitPointIndicator = FindObjectOfType<HitPointIndicatorController>();
+        if (hitPointIndicator != null)
+        {
+            hitPointIndicator.SubscribeEvent(this);
+        }
+    }
 
 
     public async UniTaskVoid StartCueControlAsync()
     {
         isCueControlActive = true;
-        if (GameManager.Instance.GetMyPlayerNumber() != GameManager.Instance.playerTurn.Value) return;
-        while (!GameManager.Instance.freeBall.Value)
+        if (GameManager.Instance.GetMyPlayerNumber() != GameManager.Instance.playerTurn.Value)
+        {
+            Debug.Log($"not your turn{GameManager.Instance.GetMyPlayerNumber()} {GameManager.Instance.playerTurn.Value}");
+            return;
+        }
+        while (GameManager.Instance.freeBall.Value)
         {
             await UniTask.Yield();
         }
@@ -81,10 +90,10 @@ public class CueController : NetworkBehaviour
         CueDirection = rotation * Vector3.forward;
 
         // 큐의 회전 및 위치 설정
+
         Cue.transform.rotation = Quaternion.LookRotation(CueDirection);
         Cue.transform.position = CueBall.position + CueDirection * cueOffset;
-        Cue.transform.position = new Vector3(Cue.transform.position.x, Cue.transform.position.y, Cue.transform.position.z);
-
+        Debug.Log($"{mousePos} {Cue.transform.rotation} {Cue.transform.position}");
         // 마우스 왼쪽 버튼 클릭으로 방향을 고정
         if (Input.GetMouseButtonDown(0))
         {
@@ -106,6 +115,8 @@ public class CueController : NetworkBehaviour
             // 큐의 회전 및 위치 업데이트
             Cue.transform.rotation = Quaternion.LookRotation(CueDirection);
             Cue.transform.position = CueBall.position + CueDirection * cueOffset;
+
+            Debug.Log($"{mousePos} {Cue.transform.rotation} {Cue.transform.position}");
         }
 
         // 상하 방향키로 파워 조절
@@ -118,6 +129,8 @@ public class CueController : NetworkBehaviour
             // 큐와 공 사이의 거리 조절
             cueOffset = Mathf.Clamp(power / 8, minPower, maxPower / 8);
             Cue.transform.position = CueBall.position + CueDirection * cueOffset;
+
+            Debug.Log($"{mousePos} {Cue.transform.rotation} {Cue.transform.position}");
         }
 
         // 스페이스바를 누르면 공을 침
@@ -125,7 +138,6 @@ public class CueController : NetworkBehaviour
         {
             GameManager.Instance.HitConfirmedServerRpc();
             StartCoroutine(HitBall());
-            isDirectionFixed = false;
         }
 
         // 마우스 왼쪽 버튼 클릭으로 방향 고정 해제
@@ -141,7 +153,7 @@ public class CueController : NetworkBehaviour
         if (!IsOwner)
             return;
         // 입력 검증...
-
+        Debug.Log("Hit");
         // 큐볼에 힘 적용
         cueBallController.HitBall(direction, power, hitPoint);
 
@@ -211,6 +223,21 @@ public class CueController : NetworkBehaviour
     public void HideCue()
     {
         Cue.GetComponent<MeshRenderer>().enabled = false;
+    }
+
+    public void SetOwnerClientId(ulong clientId)
+    {
+        GetComponent<NetworkObject>().ChangeOwnership(clientId);
+    }
+
+    public void EnableCue()
+    {
+        Cue.SetActive(true);
+    }
+
+    public void DisableCue()
+    {
+        Cue.SetActive(false);
     }
 }
 

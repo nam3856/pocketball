@@ -13,10 +13,10 @@ public class GameManager : NetworkBehaviour
     public static GameManager Instance { get; private set; }
 
     [Header("Player Information")]
-    public List<ulong> players = new List<ulong>();
+    public NetworkList<ulong> players;
     public NetworkVariable<ulong> player1ClientId = new NetworkVariable<ulong>();
     public NetworkVariable<ulong> player2ClientId = new NetworkVariable<ulong>();
-    public NetworkVariable<int> playerTurn = new NetworkVariable<int>(1);
+    public NetworkVariable<int> playerTurn = new NetworkVariable<int>(0);
     private NetworkVariable<int> winner = new NetworkVariable<int>(0);
     public NetworkVariable<FixedString32Bytes> player1Type = new NetworkVariable<FixedString32Bytes>();
     public NetworkVariable<FixedString32Bytes> player2Type = new NetworkVariable<FixedString32Bytes>();
@@ -29,14 +29,13 @@ public class GameManager : NetworkBehaviour
     public GameObject eightBall; // 8번 공
     public GameObject stripedBallPrefab; // 줄무늬 공 프리팹 리스트
     public GameObject solidBallPrefab; // 단색 공 프리팹 리스트
-    public CueController cueController;
     private CueBallController cueBallController;
     public SceneLoader sceneLoader;
-    private GameObject cue;
     private GameObject cueBall;
-    private NetworkObject cueNetworkObject;
+    private NetworkObject cueBallNetworkObject;
     public List<BallController> ballControllers = new List<BallController>();
     public List<NetworkObject> spawnedNetworkBalls = new List<NetworkObject>();
+    public List<CueController> cueControllers = new List<CueController>();
 
     [Header("Network Variables")]
     public NetworkVariable<int> solidCount = new NetworkVariable<int>(7);
@@ -92,36 +91,68 @@ public class GameManager : NetworkBehaviour
         if (IsServer)
         {
             Debug.Log("GameManager: 게임 시작");
-            SpawnCue();
+            SpawnCueForPlayer(players[0]);
+            SpawnCueForPlayer(players[1]);
             SpawnBalls();
-            AssignCueOwnershipServerRpc();
+            TurnChange();
+            player1Cue.GetComponent<CueController>().EnableCue();
         }
         else
         {
         }
     }
-    private void SpawnCue()
-    {
-        cue = Instantiate(cuePrefab, Vector3.zero, Quaternion.identity);
-        cueNetworkObject = cue.GetComponent<NetworkObject>();
-        cueNetworkObject.Spawn();
-        cueController = cue.GetComponent<CueController>();
-        cueReference.Value = new NetworkObjectReference(cueNetworkObject);
-        HitPointIndicatorController hitPointIndicator = FindObjectOfType<HitPointIndicatorController>();
-        if (hitPointIndicator != null)
-        {
-            hitPointIndicator.SubscribeEvent(cueController);
-        }
 
+    private void SpawnCueForPlayer(ulong clientId)
+    {
+        // 큐 생성
+        GameObject cue = Instantiate(cuePrefab, Vector3.zero, Quaternion.identity);
+        NetworkObject cueNetworkObject = cue.GetComponent<NetworkObject>();
+
+        // 서버에서 큐 오브젝트를 스폰하고 소유권을 플레이어에게 할당
+        cueNetworkObject.SpawnWithOwnership(clientId);
+
+        // 해당 플레이어의 큐 컨트롤러 설정 (소유 클라이언트에서만 조작 가능)
+        CueController cueController = cue.GetComponent<CueController>();
+        cueController.SetOwnerClientId(clientId);
+
+        cueControllers.Add(cueController);
+
+        // 서버에서 해당 플레이어의 큐를 관리하기 위해 저장
+        if (clientId == player1ClientId.Value)
+        {
+            player1Cue = cue;  // player1Cue는 게임 매니저의 멤버 변수
+        }
+        else if (clientId == player2ClientId.Value)
+        {
+            player2Cue = cue;  // player2Cue는 게임 매니저의 멤버 변수
+        }
     }
     private void SpawnBalls()
     {
-        InitializeBalls();
+        // 1. 큐볼 스폰 (왼쪽 끝)
+        Vector3 cueBallPosition = CalculateCueBallPosition();
+        cueBall = Instantiate(cueBallPrefab, cueBallPosition, Quaternion.identity);
+        cueBallNetworkObject = cueBall.GetComponent<NetworkObject>();
+        cueBallNetworkObject.Spawn();
+        cueBallController = cueBall.GetComponent<CueBallController>();
+        foreach(var cueController in cueControllers)
+        {
+            cueBallController.cueController = cueController;
+            cueController.CueBall = cueBall.transform;
+            cueController.cueBallController = cueBallController;
+            if(cueController.OwnerClientId == player1ClientId.Value) cueController.hitPointIndicator = GameObject.Find("Canvas/aboutHit/HitIndicator").transform;
+            if (cueController.OwnerClientId == player2ClientId.Value) cueController.hitPointIndicator = GameObject.Find("Canvas/aboutHit/HitIndicator").transform;
+        }
+        ballControllers.Add(cueBall.GetComponent<BallController>());
+        spawnedNetworkBalls.Add(cueBallNetworkObject);
+        Debug.Log($"CueBall spawned at: {cueBallPosition}");
+
+        // 2. 삼각형 형태로 15개의 공 스폰 (오른쪽 끝)
+        SpawnBallTriangle();
     }
     public override void OnNetworkSpawn()
     {
         base.OnNetworkSpawn();
-
         NetworkManager.Singleton.OnClientConnectedCallback += OnClientConnected;
         NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnected;
         solidCount.OnValueChanged += OnSolidCountChanged;
@@ -134,67 +165,70 @@ public class GameManager : NetworkBehaviour
         }
         if (IsClient)
         {
+            players.OnListChanged += OnPlayersChanged;
             freeBall.OnValueChanged += HandleFreeBallChange;
             ballsAreMoving.OnValueChanged += HandleBallsMovingChange;
-            cueReference.OnValueChanged += (previousValue, newValue) =>
+            cueBallReference.OnValueChanged += OnCueBallReferenceChanged;
+        }
+    }
+
+
+    private void OnCueBallReferenceChanged(NetworkObjectReference previousValue, NetworkObjectReference newValue)
+    {
+        if (newValue.TryGet(out NetworkObject cueBallNetworkObject))
+        {
+            cueBall = cueBallNetworkObject.gameObject;
+            cueBallController = cueBallNetworkObject.GetComponent<CueBallController>();
+            foreach (var cueController in cueControllers)
             {
-                if (newValue.TryGet(out NetworkObject cueNetworkObject))
-                {
-                    cue = cueNetworkObject.gameObject;
-                    cueController = cue.GetComponent<CueController>();
-                }
-            };
-            cueBallReference.OnValueChanged += (previousValue, newValue) =>
-            {
-                if (newValue.TryGet(out NetworkObject cueBallNetworkObject))
-                {
-                    cueBall = cueBallNetworkObject.gameObject;
-                    cueBallController = cueBall.GetComponent<CueBallController>();
-                    cueController.CueBall = cueBall.transform;
-                    cueController.cueBallController = cueBallController;
-                }
-            };
+                cueController.CueBall = cueBall.transform;
+                cueController.cueBallController = cueBallController;
+            }
+        }
+    }
+    Vector3 mousePos;
+    private GameObject player1Cue;
+    private GameObject player2Cue;
+
+    private void Update()
+    {
+        mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+    }
+    private void OnPlayersChanged(NetworkListEvent<ulong> changeEvent)
+    {
+        Debug.LogError($"Players list updated. Count: {players.Count}");
+        foreach (var playerId in players)
+        {
+            Debug.LogError($"Player ID: {playerId}");
         }
     }
 
     private void HandleFreeBallChange(bool previousValue, bool newValue)
     {
-        if (cueController != null)
+        if (newValue)
         {
-            if (newValue)
-                cueController.HideCue();
-            else
-                cueController.ShowCue();
+            if (player1Cue.activeSelf) player1Cue.GetComponent<CueController>().HideCue();
+            if (player2Cue.activeSelf) player2Cue.GetComponent<CueController>().HideCue();
+        }
+        else
+        {
+            if (player1Cue.activeSelf) player1Cue.GetComponent<CueController>().ShowCue();
+            if (player2Cue.activeSelf) player2Cue.GetComponent<CueController>().ShowCue();
         }
     }
 
     private void HandleBallsMovingChange(bool previousValue, bool newValue)
     {
-        if (cueController != null)
+        if (newValue)
         {
-            if (newValue)
-                cueController.HideCue();
-            else
-                cueController.ShowCue();
+            if (player1Cue.activeSelf) player1Cue.GetComponent<CueController>().HideCue();
+            if (player2Cue.activeSelf) player2Cue.GetComponent<CueController>().HideCue();
         }
-    }
-    private void InitializeBalls()
-    {
-        // 1. 큐볼 스폰 (왼쪽 끝)
-        Vector3 cueBallPosition = CalculateCueBallPosition();
-        cueBall = Instantiate(cueBallPrefab, cueBallPosition, Quaternion.identity);
-        cueBall.GetComponent<NetworkObject>().Spawn();
-        cueBallController = cueBall.GetComponent<CueBallController>();
-        cueBallController.cueController = cueController;
-        cueController.CueBall = cueBall.transform;
-        cueController.cueBallController = cueBallController;
-        cueController.hitPointIndicator = GameObject.Find("Canvas/aboutHit/HitIndicator").transform;
-        ballControllers.Add(cueBall.GetComponent<BallController>());
-        spawnedNetworkBalls.Add(cueBall.GetComponent<NetworkObject>());
-        Debug.Log($"CueBall spawned at: {cueBallPosition}");
-
-        // 2. 삼각형 형태로 15개의 공 스폰 (오른쪽 끝)
-        SpawnBallTriangle();
+        else
+        {
+            if (player1Cue.activeSelf) player1Cue.GetComponent<CueController>().ShowCue();
+            if (player2Cue.activeSelf) player2Cue.GetComponent<CueController>().ShowCue();
+        }
     }
 
     private Vector3 CalculateCueBallPosition()
@@ -383,6 +417,8 @@ public class GameManager : NetworkBehaviour
 
     void Awake()
     {
+
+        players = new NetworkList<ulong>();
         // 싱글톤 패턴 구현
         if (Instance == null)
         {
@@ -398,12 +434,11 @@ public class GameManager : NetworkBehaviour
     void Start()
     {
         isFirstTime = true;
-
         if (IsServer)
         {
             solidCount.Value = 7;
             stripedCount.Value = 7;
-            playerTurn.Value = 1;
+            playerTurn.Value = 0;
         }
 
     }
@@ -413,16 +448,16 @@ public class GameManager : NetworkBehaviour
         if (player1ClientId.Value == 0)
         {
             player1ClientId.Value = clientId;
-            Debug.Log($"Player 1 connected: {clientId}");
+            Debug.LogError($"Player 1 connected: {clientId}");
         }
         else if (player2ClientId.Value == 0)
         {
             player2ClientId.Value = clientId;
-            Debug.Log($"Player 2 connected: {clientId}");
+            Debug.LogError($"Player 2 connected: {clientId}");
         }
         else
         {
-            Debug.Log("더 이상 플레이어를 받을 수 없습니다.");
+            Debug.LogError("더 이상 플레이어를 받을 수 없습니다.");
         }
     }
 
@@ -442,16 +477,30 @@ public class GameManager : NetworkBehaviour
         {
             cueBallController.StartFreeBallPlacement(newValue).Forget();
         }
-        cueController.StartCueControlAsync().Forget();
+        if (newValue == 1 && player1Cue != null)
+        {
+            player1Cue.GetComponent<CueController>().EnableCue();
+            if (player2Cue != null)
+            {
+                player2Cue.GetComponent<CueController>().DisableCue();
+            }
+        }
+        else if (newValue == 2 && player2Cue != null)
+        {
+            player2Cue.GetComponent<CueController>().EnableCue();
+            if (player1Cue != null)
+            {
+                player1Cue.GetComponent<CueController>().DisableCue();
+            }
+        }
     }
 
     public int GetMyPlayerNumber()
     {
         ulong myClientId = NetworkManager.Singleton.LocalClientId;
-        if (player1ClientId.Value == myClientId)
-            return 2;
-        else if (player2ClientId.Value == myClientId)
-            return 1;
+        int index = players.IndexOf(myClientId);
+        if (index >= 0)
+            return index + 1;
         else
             return 0; // 할당되지 않음
     }
@@ -490,6 +539,7 @@ public class GameManager : NetworkBehaviour
     [ServerRpc]
     public void HitConfirmedServerRpc()
     {
+        Debug.Log("HitConfirmed");
         foreach (var ball in spawnedNetworkBalls)
         {
             NetworkObjectReference ballReference = new NetworkObjectReference(ball);
@@ -710,16 +760,26 @@ public class GameManager : NetworkBehaviour
 
     void TurnChange()
     {
+        if(playerTurn.Value == 0)
+        {
+            playerTurn.Value = 1;
+            cueControllers[0].StartCueControlAsync().Forget();
+
+            AssignCueAndCueBallOwnershipServerRpc();
+            NotifyTurnChangedClientRpc(playerTurn.Value);
+
+            return;
+        }
         if (cueBallPocketed)
         {
             SetFreeBallServerRpc(true);
         }
-
+        isFirstTime = false;
         if (!hasExtraTurn.Value)
         {
             // 턴 변경
             playerTurn.Value = playerTurn.Value == 1 ? 2 : 1;
-            AssignCueOwnershipServerRpc();
+            AssignCueAndCueBallOwnershipServerRpc();
             NotifyTurnChangedClientRpc(playerTurn.Value);
         }
         else
@@ -728,7 +788,7 @@ public class GameManager : NetworkBehaviour
         }
 
         // 다음 턴을 위해 변수 초기화
-        isFirstTime = false;
+        cueControllers[playerTurn.Value - 1].StartCueControlAsync().Forget();
         pocketedBallsThisTurn.Clear();
         cueBallPocketed = false;
     }
@@ -835,18 +895,37 @@ public class GameManager : NetworkBehaviour
         {
             NetworkManager.OnClientConnectedCallback -= OnClientConnectedCallback;
         }
-
+        if (IsClient)
+        {
+            players.OnListChanged -= OnPlayersChanged;
+            freeBall.OnValueChanged -= HandleFreeBallChange;
+            ballsAreMoving.OnValueChanged -= HandleBallsMovingChange;
+            players.OnListChanged -= OnPlayersChanged;
+            cueBallReference.OnValueChanged -= OnCueBallReferenceChanged;
+        }
+        movementCheckCancellationTokenSource?.Cancel();
+        if (players != null)
+        {
+            players.Dispose();
+        }
         base.OnDestroy();
     }
 
-    //private void OnGUI()
-    //{
-    //    GUI.Label(new Rect(10, 170, 250, 20), $"Ball Count - Solid: {solidCount.Value}, Striped: {stripedCount.Value}");
-    //    GUI.Label(new Rect(10, 190, 250, 20), $"Player {playerTurn.Value}'s Turn");
-    //    GUI.Label(new Rect(10, 210, 250, 20), $"Player 1 Type: {GetPlayerType(1) ?? "Not Assigned"}");
-    //    GUI.Label(new Rect(10, 230, 250, 20), $"Player 2 Type: {GetPlayerType(2) ?? "Not Assigned"}");
-    //    GUI.Label(new Rect(10, 250, 250, 20), $"isFirst: {isFirstTime}");
-    //}
+    private void OnGUI()
+    {
+        
+        GUI.Label(new Rect(10, 270, 250, 20), $"{mousePos}");
+        GUI.Label(new Rect(10, 170, 250, 20), $"Ball Count - Solid: {solidCount.Value}, Striped: {stripedCount.Value}");
+        GUI.Label(new Rect(10, 190, 250, 20), $"Player {playerTurn.Value}'s Turn");
+        GUI.Label(new Rect(10, 210, 250, 20), $"Player 1 Type: {GetPlayerType(1) ?? "Not Assigned"}");
+        GUI.Label(new Rect(10, 230, 250, 20), $"Player 2 Type: {GetPlayerType(2) ?? "Not Assigned"}");
+        GUI.Label(new Rect(10, 250, 250, 20), $"isFirst: {isFirstTime}");
+        //GUI.Label(new Rect(10, 270, 250, 20), $"My Player Number: {GetMyPlayerNumber()}");
+        GUI.Label(new Rect(10, 150, 250, 20), $"Player 1 ID: {player1ClientId.Value}");
+        GUI.Label(new Rect(10, 130, 250, 20), $"Player 2 ID: {player2ClientId.Value}");
+        GUI.Label(new Rect(10, 110, 250, 20), $"local Client ID: {NetworkManager.Singleton.LocalClientId}");
+        GUI.Label(new Rect(10, 90, 250, 20), $"{playerTurn.Value}");
+    }
 
     [ServerRpc]
     public void SetFreeBallServerRpc(bool value)
@@ -861,7 +940,7 @@ public class GameManager : NetworkBehaviour
     }
 
     [ServerRpc]
-    private void AssignCueOwnershipServerRpc()
+    private void AssignCueAndCueBallOwnershipServerRpc()
     {
         if (players.Count == 0)
         {
@@ -870,7 +949,35 @@ public class GameManager : NetworkBehaviour
         }
 
         ulong currentPlayerId = players[playerTurn.Value-1];
-        cueNetworkObject.ChangeOwnership(currentPlayerId);
-        Debug.Log($"Cue ownership changed to player {currentPlayerId}");
+        cueBallNetworkObject.ChangeOwnership(currentPlayerId);
+        Debug.Log($"Cue and cueball ownership changed to player {currentPlayerId}");
+    }
+
+    public override void OnNetworkDespawn()
+    {
+        base.OnNetworkDespawn();
+
+        // 기존 구독 해제
+        solidCount.OnValueChanged -= OnSolidCountChanged;
+        stripedCount.OnValueChanged -= OnStripedCountChanged;
+        playerTurn.OnValueChanged -= OnPlayerTurnChanged;
+
+        if (IsServer)
+        {
+            NetworkManager.OnClientConnectedCallback -= OnClientConnectedCallback;
+        }
+        if (IsClient)
+        {
+            players.OnListChanged -= OnPlayersChanged;
+            freeBall.OnValueChanged -= HandleFreeBallChange;
+            ballsAreMoving.OnValueChanged -= HandleBallsMovingChange;
+            cueBallReference.OnValueChanged -= OnCueBallReferenceChanged;
+        }
+
+        // NetworkList Dispose
+        if (players != null)
+        {
+            players.Dispose();
+        }
     }
 }
