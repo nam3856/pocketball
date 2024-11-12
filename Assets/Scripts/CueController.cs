@@ -35,7 +35,6 @@ public class CueController : NetworkBehaviour
     {
         gameManager = FindObjectOfType<GameManager>();
         cameraController = FindObjectOfType<CameraController>();
-
         HitPointIndicatorController hitPointIndicator = FindObjectOfType<HitPointIndicatorController>();
         if (hitPointIndicator != null)
         {
@@ -46,12 +45,21 @@ public class CueController : NetworkBehaviour
 
     public async UniTaskVoid StartCueControlAsync()
     {
+        //if (!IsOwner) return;
+
         isCueControlActive = true;
-        if (GameManager.Instance.GetMyPlayerNumber() != GameManager.Instance.playerTurn.Value)
+        int count = 0;
+
+        await UniTask.Delay(100);
+        while (GameManager.Instance.GetMyPlayerNumber() != GameManager.Instance.playerTurn.Value)
         {
             Debug.Log($"not your turn{GameManager.Instance.GetMyPlayerNumber()} {GameManager.Instance.playerTurn.Value}");
-            return;
+            count++;
+
+            await UniTask.Delay(100);
+            if (count >= 10) return;
         }
+
         while (GameManager.Instance.freeBall.Value)
         {
             await UniTask.Yield();
@@ -79,7 +87,6 @@ public class CueController : NetworkBehaviour
 
     public void FollowMousePointer()
     {
-        if (!IsOwner) return;
         // 마우스 위치를 가져옴
         mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
         mousePos.y = 0.33f;
@@ -93,17 +100,28 @@ public class CueController : NetworkBehaviour
 
         Cue.transform.rotation = Quaternion.LookRotation(CueDirection);
         Cue.transform.position = CueBall.position + CueDirection * cueOffset;
-        Debug.Log($"{mousePos} {Cue.transform.rotation} {Cue.transform.position}");
+        UpdateCuePositionServerRpc(Cue.transform.position, Cue.transform.rotation);
         // 마우스 왼쪽 버튼 클릭으로 방향을 고정
         if (Input.GetMouseButtonDown(0))
         {
             isDirectionFixed = true;
         }
     }
+    [ServerRpc(RequireOwnership = false)]
+    private void UpdateCuePositionServerRpc(Vector3 position, Quaternion rotation)
+    {
+        UpdateCuePositionClientRpc(position, rotation);
+    }
 
+    // 다른 클라이언트에서도 위치와 회전을 업데이트하는 ClientRpc
+    [ClientRpc]
+    private void UpdateCuePositionClientRpc(Vector3 position, Quaternion rotation)
+    {
+        Cue.transform.position = position;
+        Cue.transform.rotation = rotation;
+    }
     void SetDirectionAndPower()
     {
-        if (!IsOwner) return;
         // 좌우 방향키로 각도 조절
         float horizontalInput = Input.GetAxis("Horizontal");
         if (horizontalInput != 0)
@@ -115,8 +133,7 @@ public class CueController : NetworkBehaviour
             // 큐의 회전 및 위치 업데이트
             Cue.transform.rotation = Quaternion.LookRotation(CueDirection);
             Cue.transform.position = CueBall.position + CueDirection * cueOffset;
-
-            Debug.Log($"{mousePos} {Cue.transform.rotation} {Cue.transform.position}");
+            UpdateCuePositionServerRpc(Cue.transform.position, Cue.transform.rotation);
         }
 
         // 상하 방향키로 파워 조절
@@ -129,14 +146,14 @@ public class CueController : NetworkBehaviour
             // 큐와 공 사이의 거리 조절
             cueOffset = Mathf.Clamp(power / 8, minPower, maxPower / 8);
             Cue.transform.position = CueBall.position + CueDirection * cueOffset;
-
-            Debug.Log($"{mousePos} {Cue.transform.rotation} {Cue.transform.position}");
+            UpdateCuePositionServerRpc(Cue.transform.position, Cue.transform.rotation);
         }
 
         // 스페이스바를 누르면 공을 침
         if (Input.GetKeyDown(KeyCode.Space))
         {
             GameManager.Instance.HitConfirmedServerRpc();
+            isCueControlActive = false;
             StartCoroutine(HitBall());
         }
 
@@ -147,7 +164,7 @@ public class CueController : NetworkBehaviour
         }
     }
 
-    [ServerRpc]
+    [ServerRpc(RequireOwnership = false)]
     void RequestShootServerRpc(Vector3 direction, float power, Vector2 hitPoint)
     {
         if (!IsOwner)
@@ -218,11 +235,13 @@ public class CueController : NetworkBehaviour
     public void ShowCue()
     {
         Cue.GetComponent<MeshRenderer>().enabled = true;
+        ShowCueClientRpc();
     }
 
     public void HideCue()
     {
         Cue.GetComponent<MeshRenderer>().enabled = false;
+        HideCueClientRpc();
     }
 
     public void SetOwnerClientId(ulong clientId)
@@ -238,6 +257,24 @@ public class CueController : NetworkBehaviour
     public void DisableCue()
     {
         Cue.SetActive(false);
+    }
+
+    [ClientRpc]
+    private void ShowCueClientRpc()
+    {
+        if (!IsOwner)
+        {
+            Cue.GetComponent<MeshRenderer>().enabled = true;
+        }
+    }
+
+    [ClientRpc]
+    private void HideCueClientRpc()
+    {
+        if (!IsOwner)
+        {
+            Cue.GetComponent<MeshRenderer>().enabled = false;
+        }
     }
 }
 

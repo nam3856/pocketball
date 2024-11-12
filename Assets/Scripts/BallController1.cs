@@ -106,8 +106,14 @@ public class BallController : NetworkBehaviour
     public bool IsBallStopped()
     {
         if (transform.position.y <= -1f) return true;
-        if (BallRigidbody.velocity.magnitude < 0.1f && BallRigidbody.angularVelocity.magnitude < 0.6f) BallRigidbody.angularVelocity = Vector3.zero;
+        if (BallRigidbody.velocity.magnitude < 0.1f && BallRigidbody.angularVelocity.magnitude < 0.8f) BallRigidbody.angularVelocity = Vector3.zero;
         return BallRigidbody.velocity.magnitude < 0.1f && BallRigidbody.angularVelocity.magnitude < 0.1f;
+    }
+
+    public void StopMove()
+    {
+        if (transform.position.y <= -1f) return;
+        BallRigidbody.constraints = RigidbodyConstraints.FreezePosition;
     }
 
     private IEnumerator ByeBye()

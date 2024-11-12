@@ -11,6 +11,11 @@ public class UIController : MonoBehaviour
 
     private void Start()
     {
+        
+    }
+
+    public void SetUpTurnText()
+    {
         if (GameManager.Instance != null)
         {
             // 현재 턴 값을 UI에 초기 설정
@@ -23,12 +28,6 @@ public class UIController : MonoBehaviour
         {
             Debug.LogError("UIController: GameManager 인스턴스를 찾을 수 없습니다.");
         }
-    }
-
-    void OnDisable()
-    {
-        //GameManager.OnScoreChanged -= UpdateScore;
-        //GameManager.OnTurnChanged -= UpdateTurnText;
     }
 
     private void UpdateTurnText(int turnIndex)
@@ -47,15 +46,17 @@ public class UIController : MonoBehaviour
 
     private string GetPlayerName(ulong playerId)
     {
-        if (NetworkManager.Singleton.ConnectedClients.TryGetValue(playerId, out var client))
+        if (NetworkManager.Singleton.IsServer)
         {
-            if (client.PlayerObject != null)
+            if (NetworkManager.Singleton.ConnectedClients.TryGetValue(playerId, out var client))
             {
-                var playerNameComponent = client.PlayerObject.GetComponent<PlayerName>();
-                if (playerNameComponent != null)
+                if (client.PlayerObject != null)
                 {
-                    // FixedString32Bytes를 string으로 변환하여 반환
-                    return playerNameComponent.PlayerNameVar.Value.ToString();
+                    var playerNameComponent = client.PlayerObject.GetComponent<PlayerName>();
+                    if (playerNameComponent != null)
+                    {
+                        return playerNameComponent.PlayerNameVar.Value.ToString();
+                    }
                 }
             }
         }

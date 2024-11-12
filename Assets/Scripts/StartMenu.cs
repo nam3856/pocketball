@@ -11,6 +11,7 @@ public class StartMenu : MonoBehaviour
     void Start()
     {
         startButton.onClick.AddListener(OnStartButtonClicked);
+        Screen.SetResolution(1280, 720, false);
     }
 
     void OnStartButtonClicked()
