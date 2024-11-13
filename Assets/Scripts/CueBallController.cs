@@ -60,10 +60,19 @@ public class CueBallController : NetworkBehaviour
         }
     }
 
-    public async UniTaskVoid StartFreeBallPlacement(int player)
+    public async UniTaskVoid StartFreeBallPlacement()
     {
+        await UniTask.Delay(100);
         cueBallRigidbody.constraints = RigidbodyConstraints.None;
-        if (GameManager.Instance.GetMyPlayerNumber() != player) return;
+        int count = 0;
+        while (GameManager.Instance.GetMyPlayerNumber() != GameManager.Instance.playerTurn.Value)
+        {
+            Debug.Log($"not your turn{GameManager.Instance.GetMyPlayerNumber()} {GameManager.Instance.playerTurn.Value}");
+            count++;
+
+            await UniTask.Delay(100);
+            if (count >= 10) return;
+        }
         if (!GameManager.Instance.freeBall.Value)
         {
             return;
@@ -84,6 +93,7 @@ public class CueBallController : NetworkBehaviour
             if (IsPositionValid(newPosition))
             {
                 transform.position = newPosition; // 큐볼 위치 업데이트
+                UpdateCueBallPositionClientRpc(newPosition);
             }
 
             // 마우스 왼쪽 버튼 클릭 시 위치 확정
@@ -99,6 +109,14 @@ public class CueBallController : NetworkBehaviour
 
             await UniTask.Yield();
         }
+    }
+    [ClientRpc]
+    private void UpdateCueBallPositionClientRpc(Vector3 position)
+    {
+        transform.position = position;
+        cueBallRigidbody.isKinematic = false;
+        cueBallRigidbody.velocity = Vector3.zero;
+        cueBallRigidbody.angularVelocity = Vector3.zero;
     }
 
     bool IsPositionValidOnServer(Vector3 position)
@@ -129,7 +147,7 @@ public class CueBallController : NetworkBehaviour
         return true;
     }
 
-    [ServerRpc]
+    [ServerRpc(RequireOwnership = false)]
     void RequestFreeBallPlacementServerRpc(Vector3 newPosition)
     {
         // 해당 위치에 다른 공이 있는지 서버에서 검사

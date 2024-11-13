@@ -46,7 +46,7 @@ public class CueController : NetworkBehaviour
     public async UniTaskVoid StartCueControlAsync()
     {
         //if (!IsOwner) return;
-
+        
         isCueControlActive = true;
         int count = 0;
 
@@ -64,6 +64,7 @@ public class CueController : NetworkBehaviour
         {
             await UniTask.Yield();
         }
+        ShowCue();
         while (isCueControlActive)
         {
             if (!isDirectionFixed)
@@ -220,14 +221,14 @@ public class CueController : NetworkBehaviour
         isHitting = false;
         power = 1f;
         // 큐대를 초기 위치로 복귀
-        cueOffset = -power;
+        cueOffset = power;
         Cue.transform.position = CueBall.position + CueDirection * cueOffset;
         hitPoint = Vector2.zero;
-        OnHitBall?.Invoke();
+        HideCue();
         
     }
-
-    internal void SetHitPoint(Vector2 normalizedPoint)
+    [ClientRpc]
+    internal void SetHitPointClientRPC(Vector2 normalizedPoint)
     {
         hitPoint = normalizedPoint;
     }

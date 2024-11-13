@@ -60,6 +60,6 @@ public class HitPointIndicatorController : MonoBehaviour, IPointerClickHandler
         Debug.Log("Normalized Hit Point: " + normalizedPoint);
 
         // CueController에 타격점 전달
-        cueController.SetHitPoint(normalizedPoint);
+        cueController.SetHitPointClientRPC(normalizedPoint);
     }
 }
