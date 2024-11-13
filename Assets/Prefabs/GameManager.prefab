@@ -45,7 +45,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  GlobalObjectIdHash: 2512855664
+  GlobalObjectIdHash: 3722897733
   InScenePlacedSourceGlobalObjectIdHash: 3722897733
   AlwaysReplicateAsRoot: 0
   SynchronizeTransform: 1
@@ -143,6 +143,7 @@ MonoBehaviour:
         byte0028: 0
         byte0029: 0
   cuePrefab: {fileID: 7994333228857099580, guid: 4c633136d6b82b44589b1150baa0f483, type: 3}
+  ballInHandPrefab: {fileID: 1941867969909003780, guid: 2544cd41397372346b5f467d4d128de8, type: 3}
   cueBallPrefab: {fileID: 1941867969909003780, guid: a186d8cfbb564e04483daac69ec75eb8, type: 3}
   ball1Prefab: {fileID: 318016002959616977, guid: 9d89d4c2f05f6d249843b6f932ad52a9, type: 3}
   ball8Prefab: {fileID: 4085883179793340467, guid: 540b58842dc5bb64bbfe0f02a5f7a2f8, type: 3}
@@ -150,9 +151,12 @@ MonoBehaviour:
   stripedBallPrefab: {fileID: 2523690204137293108, guid: b650bb5b0587a794287ebe2c8aba8282, type: 3}
   solidBallPrefab: {fileID: 4766902699098221353, guid: f17171bbed3390f44b4a35f1e4d68ab3, type: 3}
   sceneLoader: {fileID: 0}
+  cueBallNetworkObject: {fileID: 0}
   ballControllers: []
   spawnedNetworkBalls: []
   cueControllers: []
+  ballInHandObjects: []
+  ballInHandControllers: []
   solidCount:
     m_InternalValue: 7
   stripedCount:
@@ -163,5 +167,7 @@ MonoBehaviour:
     m_InternalValue: 0
   ballsAreMoving:
     m_InternalValue: 0
+  isFirstTime:
+    m_InternalValue: 1
   ballRadius: 0.32
   triangleSpacing: 0.66

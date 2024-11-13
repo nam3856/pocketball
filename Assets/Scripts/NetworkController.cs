@@ -5,7 +5,7 @@ public class NetworkController : MonoBehaviour
 {
     void Start()
     {
-#if !UNITY_EDITOR
+#if UNITY_EDITOR
         // Unity 에디터 환경에서 실행되는 코드
         if (!NetworkManager.Singleton.StartHost())
         {

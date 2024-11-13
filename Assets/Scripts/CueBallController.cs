@@ -9,11 +9,6 @@ public class CueBallController : NetworkBehaviour
     public float torqueMultiplier = 20f;
     public AudioClip hitAudioClip;
 
-    private float tableMinX = -7.5f;
-    private float tableMaxX = 7.5f;
-    private float tableMinZ = -3.3f;
-    private float tableMaxZ = 3.3f;
-
     private void Start()
     {
         audioSource = GetComponent<AudioSource>();
@@ -59,102 +54,17 @@ public class CueBallController : NetworkBehaviour
             audioSource.PlayOneShot(hitAudioClip);
         }
     }
-
-    public async UniTaskVoid StartFreeBallPlacement()
+    [ServerRpc]
+    internal void CompleteBallInHandServerRpc(Vector3 newPosition)
     {
-        await UniTask.Delay(100);
-        cueBallRigidbody.constraints = RigidbodyConstraints.None;
-        int count = 0;
-        while (GameManager.Instance.GetMyPlayerNumber() != GameManager.Instance.playerTurn.Value)
-        {
-            Debug.Log($"not your turn{GameManager.Instance.GetMyPlayerNumber()} {GameManager.Instance.playerTurn.Value}");
-            count++;
-
-            await UniTask.Delay(100);
-            if (count >= 10) return;
-        }
-        if (!GameManager.Instance.freeBall.Value)
-        {
-            return;
-        }
-
-        while (GameManager.Instance.freeBall.Value)
-        {
-            // 마우스 위치를 가져옴
-            Vector3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-            mousePos.y = transform.position.y;
-
-            // 마우스 위치를 테이블 영역 내로 제한
-            float xPos = Mathf.Clamp(mousePos.x, tableMinX, tableMaxX);
-            float zPos = Mathf.Clamp(mousePos.z, tableMinZ, tableMaxZ);
-            Vector3 newPosition = new Vector3(xPos, 0.3f, zPos);
-
-            // 해당 위치에 다른 공이 있는지 검사 (클라이언트에서 임시로 검사)
-            if (IsPositionValid(newPosition))
-            {
-                transform.position = newPosition; // 큐볼 위치 업데이트
-                UpdateCueBallPositionClientRpc(newPosition);
-            }
-
-            // 마우스 왼쪽 버튼 클릭 시 위치 확정
-            if (Input.GetMouseButtonDown(0) && IsPositionValid(newPosition))
-            {
-                // 서버에 큐볼 위치 변경 요청
-                RequestFreeBallPlacementServerRpc(newPosition);
-                // freeBall 상태 변경을 서버에 요청
-                GameManager.Instance.SetFreeBallServerRpc(false);
-                cueBallRigidbody.constraints = RigidbodyConstraints.FreezePosition;
-                break;
-            }
-
-            await UniTask.Yield();
-        }
+        UpdateCueBallPositionClientRpc(newPosition);
     }
     [ClientRpc]
     private void UpdateCueBallPositionClientRpc(Vector3 position)
     {
-        transform.position = position;
-        cueBallRigidbody.isKinematic = false;
-        cueBallRigidbody.velocity = Vector3.zero;
+        transform.position = new Vector3(position.x,0.3f,position.z);
         cueBallRigidbody.angularVelocity = Vector3.zero;
-    }
-
-    bool IsPositionValidOnServer(Vector3 position)
-    {
-        float radius = 0.32f;
-        Collider[] colliders = Physics.OverlapSphere(position, radius);
-        foreach (Collider collider in colliders)
-        {
-            if (collider.gameObject != transform.gameObject && (collider.gameObject.CompareTag("SolidBall") || collider.gameObject.CompareTag("StripedBall") || collider.gameObject.CompareTag("EightBall")))
-            {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    bool IsPositionValid(Vector3 position)
-    {
-        float radius = 0.32f; // 공의 반지름 (필요에 따라 조정)
-        Collider[] colliders = Physics.OverlapSphere(position, radius);
-        foreach (Collider collider in colliders)
-        {
-            if (collider.gameObject != transform.gameObject && (collider.gameObject.CompareTag("SolidBall") || collider.gameObject.CompareTag("StripedBall") || collider.gameObject.CompareTag("EightBall")))
-            {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    [ServerRpc(RequireOwnership = false)]
-    void RequestFreeBallPlacementServerRpc(Vector3 newPosition)
-    {
-        // 해당 위치에 다른 공이 있는지 서버에서 검사
-        if (!IsPositionValidOnServer(newPosition))
-            return;
-
-        // 큐볼의 위치를 서버에서 변경
-        transform.position = newPosition;
+        cueBallRigidbody.velocity = Vector3.zero;
+        cueBallRigidbody.constraints = RigidbodyConstraints.FreezePosition;
     }
 }

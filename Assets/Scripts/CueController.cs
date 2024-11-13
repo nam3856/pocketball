@@ -51,6 +51,8 @@ public class CueController : NetworkBehaviour
         int count = 0;
 
         await UniTask.Delay(100);
+        if(!GameManager.Instance.freeBall.Value)
+            ShowCue();
         while (GameManager.Instance.GetMyPlayerNumber() != GameManager.Instance.playerTurn.Value)
         {
             Debug.Log($"not your turn{GameManager.Instance.GetMyPlayerNumber()} {GameManager.Instance.playerTurn.Value}");
@@ -64,6 +66,8 @@ public class CueController : NetworkBehaviour
         {
             await UniTask.Yield();
         }
+        
+        await UniTask.Delay(100);
         ShowCue();
         while (isCueControlActive)
         {
@@ -77,6 +81,7 @@ public class CueController : NetworkBehaviour
             }
             await UniTask.Yield();
         }
+        HideCue();
     }
 
     public void StopCueControl()
@@ -168,8 +173,6 @@ public class CueController : NetworkBehaviour
     [ServerRpc(RequireOwnership = false)]
     void RequestShootServerRpc(Vector3 direction, float power, Vector2 hitPoint)
     {
-        if (!IsOwner)
-            return;
         // 입력 검증...
         Debug.Log("Hit");
         // 큐볼에 힘 적용
@@ -186,7 +189,6 @@ public class CueController : NetworkBehaviour
     {
         if (IsOwner)
             return;
-
         // 로컬에서 샷 적용
         cueBallController.HitBall(direction, power, hitPoint);
     }
@@ -224,7 +226,6 @@ public class CueController : NetworkBehaviour
         cueOffset = power;
         Cue.transform.position = CueBall.position + CueDirection * cueOffset;
         hitPoint = Vector2.zero;
-        HideCue();
         
     }
     [ClientRpc]
@@ -263,19 +264,13 @@ public class CueController : NetworkBehaviour
     [ClientRpc]
     private void ShowCueClientRpc()
     {
-        if (!IsOwner)
-        {
-            Cue.GetComponent<MeshRenderer>().enabled = true;
-        }
+        Cue.GetComponent<MeshRenderer>().enabled = true;
     }
 
     [ClientRpc]
     private void HideCueClientRpc()
     {
-        if (!IsOwner)
-        {
-            Cue.GetComponent<MeshRenderer>().enabled = false;
-        }
+        Cue.GetComponent<MeshRenderer>().enabled = false;
     }
 }
 
