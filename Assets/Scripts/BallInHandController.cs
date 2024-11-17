@@ -8,10 +8,16 @@ public class BallInHandController : NetworkBehaviour
 {
     public MeshRenderer meshRenderer;
 
-    private float tableMinX = -7.5f;
-    private float tableMaxX = 7.5f;
-    private float tableMinZ = -3.3f;
-    private float tableMaxZ = 3.3f;
+    private readonly float tableMinX = -7.5f;
+    private readonly float tableMaxX = 7.5f;
+    private readonly float tableMinZ = -3.5f;
+    private readonly float tableMaxZ = 3.5f;
+
+    public override void OnNetworkSpawn()
+    {
+        base.OnNetworkSpawn();
+        meshRenderer = GetComponent<MeshRenderer>();
+    }
     public void SetTransparency(Color color, float alpha)
     {
         if (meshRenderer != null)
@@ -39,7 +45,7 @@ public class BallInHandController : NetworkBehaviour
         await UniTask.Delay(100);
         int count = 0;
         ShowHelper();
-        while (GameManager.Instance.GetMyPlayerNumber() != GameManager.Instance.playerTurn.Value)
+        while (GameManager.Instance.GetMyPlayerNumber() != GameManager.Instance.playerTurn.Value || !IsOwner)
         {
             Debug.Log($"not your turn{GameManager.Instance.GetMyPlayerNumber()} {GameManager.Instance.playerTurn.Value}");
             count++;
@@ -169,7 +175,7 @@ public class BallInHandController : NetworkBehaviour
     [ServerRpc(RequireOwnership = false)]
     void HideServerRpc()
     {
-        ShowHelperClientRpc();
+        HideHelperClientRpc();
     }
     internal void ShowHelper()
     {

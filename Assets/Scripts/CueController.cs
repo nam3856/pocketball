@@ -3,6 +3,7 @@ using System.Collections;
 using UnityEngine;
 using Unity.Netcode;
 using Cysharp.Threading.Tasks;
+using static CueBallController;
 public class CueController : NetworkBehaviour
 {
     private Vector3 mousePos;
@@ -16,8 +17,8 @@ public class CueController : NetworkBehaviour
     public Transform CueBall;
 
     private float power = 1f;
-    private float minPower = 0.1f;
-    private float maxPower = 20f;
+    private readonly float minPower = 0.1f;
+    private readonly float maxPower = 20f;
     private float angleAdjustmentSpeed = 20f; // 각도 조절 속도 (필요에 따라 조정)
 
     private GameManager gameManager;
@@ -28,11 +29,11 @@ public class CueController : NetworkBehaviour
     public Transform hitPointIndicator;
     public LayerMask cueBallLayerMask;
     public event Action OnHitBall;
-
     private float cueOffset = -0.1f; // 큐볼에서 큐대까지의 거리
 
-    void Start()
+    public override void OnNetworkSpawn()
     {
+        base.OnNetworkSpawn();
         gameManager = FindObjectOfType<GameManager>();
         cameraController = FindObjectOfType<CameraController>();
         HitPointIndicatorController hitPointIndicator = FindObjectOfType<HitPointIndicatorController>();
@@ -42,18 +43,19 @@ public class CueController : NetworkBehaviour
         }
     }
 
-
     public async UniTaskVoid StartCueControlAsync()
     {
-        //if (!IsOwner) return;
-        
         isCueControlActive = true;
         int count = 0;
 
         await UniTask.Delay(100);
-        if(!GameManager.Instance.freeBall.Value)
-            ShowCue();
-        while (GameManager.Instance.GetMyPlayerNumber() != GameManager.Instance.playerTurn.Value)
+        if(!GameManager.Instance.freeBall.Value) ShowCue();
+        while (GameManager.Instance.freeBall.Value)
+        {
+            await UniTask.Yield();
+        }
+        ShowCue();
+        while (GameManager.Instance.GetMyPlayerNumber() != GameManager.Instance.playerTurn.Value || !IsOwner)
         {
             Debug.Log($"not your turn{GameManager.Instance.GetMyPlayerNumber()} {GameManager.Instance.playerTurn.Value}");
             count++;
@@ -61,14 +63,7 @@ public class CueController : NetworkBehaviour
             await UniTask.Delay(100);
             if (count >= 10) return;
         }
-
-        while (GameManager.Instance.freeBall.Value)
-        {
-            await UniTask.Yield();
-        }
-        
         await UniTask.Delay(100);
-        ShowCue();
         while (isCueControlActive)
         {
             if (!isDirectionFixed)
@@ -174,7 +169,10 @@ public class CueController : NetworkBehaviour
     void RequestShootServerRpc(Vector3 direction, float power, Vector2 hitPoint)
     {
         // 입력 검증...
-        Debug.Log("Hit");
+        if (power > maxPower) power = maxPower;
+        if (power < minPower) power = minPower;
+
+        Debug.Log($"Hit {direction} {power} {hitPoint}");
         // 큐볼에 힘 적용
         cueBallController.HitBall(direction, power, hitPoint);
 
@@ -198,7 +196,6 @@ public class CueController : NetworkBehaviour
     {
         isHitting = true;
 
-        // 큐대를 뒤로 당겼다가 앞으로 미는 애니메이션
         float animTime = 0.2f;
         float startTime = Time.time;
 
@@ -221,12 +218,19 @@ public class CueController : NetworkBehaviour
         // 초기화
         isDirectionFixed = false;
         isHitting = false;
-        power = 1f;
+        power = 0.5f;
         // 큐대를 초기 위치로 복귀
         cueOffset = power;
         Cue.transform.position = CueBall.position + CueDirection * cueOffset;
         hitPoint = Vector2.zero;
-        
+        OnHitBall?.Invoke();
+        HideCue();
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    internal void SetHitPointServerRPC(Vector2 normalizedPoint)
+    {
+        if (IsOwner) SetHitPointClientRPC(normalizedPoint);
     }
     [ClientRpc]
     internal void SetHitPointClientRPC(Vector2 normalizedPoint)

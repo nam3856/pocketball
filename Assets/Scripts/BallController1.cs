@@ -14,30 +14,51 @@ public class BallController : NetworkBehaviour
     public AudioSource audioSource;
     public int ballNumber = 0;
     public string ballType;
-    private void Start()
-    {
-        audioSource = GetComponent<AudioSource>();
-        gameManager = FindObjectOfType<GameManager>();
+    public NetworkVariable<Vector3> NetworkPosition = new NetworkVariable<Vector3>(writePerm: NetworkVariableWritePermission.Server);
+    public NetworkVariable<Vector3> NetworkVelocity = new NetworkVariable<Vector3>(writePerm: NetworkVariableWritePermission.Server);
+    private readonly float correctionFactor = 0.1f;
+    private readonly float positionThreshold = 0.01f;
+    private readonly float velocityThreshold = 0.1f;
+    private readonly float angleThreshold = 30f;
 
-        if (CompareTag("CueBall"))
+    int count = 0;
+    void FixedUpdate()
+    {
+        if (IsServer)
         {
-            ballType = "CueBall";
-            ballNumber = 0;
+            NetworkPosition.Value = transform.position;
+            NetworkVelocity.Value = BallRigidbody.velocity;
         }
-        else if (CompareTag("EightBall"))
+        else
         {
-            ballType = "EightBall";
-            ballNumber = 8;
+            if (isOnTable)
+            {
+                Vector3 positionError = NetworkPosition.Value - transform.position;
+                Vector3 velocityError = NetworkVelocity.Value - BallRigidbody.velocity;
+                float angleDifference = Vector3.Angle(BallRigidbody.velocity, NetworkVelocity.Value);
+                if (angleDifference > angleThreshold)
+                {
+                    // 방향 변화가 큰 경우 즉시 서버의 상태로 동기화
+                    transform.position = NetworkPosition.Value;
+                    BallRigidbody.velocity = NetworkVelocity.Value;
+                }
+                else
+                {
+                    if (positionError.magnitude > positionThreshold) transform.position = Vector3.Lerp(transform.position, NetworkPosition.Value, correctionFactor);
+                    if (velocityError.magnitude > velocityThreshold) BallRigidbody.velocity = Vector3.Lerp(BallRigidbody.velocity, NetworkVelocity.Value, correctionFactor);
+                }
+                
+            }
+            else
+            {
+                count++;
+                if(count == 1000)
+                {
+                    transform.position = NetworkPosition.Value;
+                    BallRigidbody.velocity = NetworkVelocity.Value;
+                }
+            }
         }
-        else if (CompareTag("SolidBall"))
-        {
-            ballType = "SolidBall";
-        }
-        else if (CompareTag("StripedBall"))
-        {
-            ballType = "StripedBall";
-        }
-        BallRigidbody = GetComponent<Rigidbody>();
     }
     private void OnCollisionEnter(Collision collision)
     {
@@ -69,7 +90,7 @@ public class BallController : NetworkBehaviour
             Debug.Log($"{name}이 바닥에 떨어짐");
             if (!CompareTag("CueBall"))
             {
-                transform.position = new(0f, 0.5f, 0f);
+                StartCoroutine(BallFellToFloor());
             }
             else
             {
@@ -126,5 +147,87 @@ public class BallController : NetworkBehaviour
         if(CompareTag("CueBall")) isOnTable = true;
     }
 
+    private IEnumerator BallFellToFloor()
+    {
+        Vector3 respawnPosition = new Vector3(5.475f, 0.33f, 0.805f);
+        float ballRadius = 0.32f;
+        float checkRadius = ballRadius * 1.1f;
 
+        bool positionFound = false;
+        int maxAttempts = 100;
+        while (!gameManager.AreAllBallsStopped())
+        {
+            yield return null; // 다음 프레임까지 대기
+        }
+
+        for (int i = 0; i < maxAttempts; i++)
+        {
+            // 일정 범위 내에서 무작위 오프셋을 적용하여 위치 시도
+            Vector3 randomOffset = new Vector3(Random.Range(-0.5f, 0.5f), 0, Random.Range(-0.5f, 0.5f));
+            Vector3 testPosition = respawnPosition + randomOffset;
+
+            // 해당 위치에 다른 공들이 있는지 확인
+            Collider[] colliders = Physics.OverlapSphere(testPosition, checkRadius);
+
+            bool isOverlapping = false;
+            foreach (Collider collider in colliders)
+            {
+                if (collider.gameObject != gameObject && (collider.CompareTag("SolidBall") || collider.CompareTag("StripedBall") || collider.CompareTag("CueBall")))
+                {
+                    isOverlapping = true;
+                    break;
+                }
+            }
+
+            if (!isOverlapping)
+            {
+                // 겹치지 않는 위치를 찾음
+                respawnPosition = testPosition;
+                positionFound = true;
+                break;
+            }
+        }
+
+        if (!positionFound)
+        {
+            Debug.LogWarning("다른 공들과 겹치지 않는 위치를 찾을 수 없습니다.");
+        }
+
+        transform.position = respawnPosition;
+        BallRigidbody.velocity = Vector3.zero;
+        BallRigidbody.angularVelocity = Vector3.zero;
+    }
+
+    public override void OnNetworkSpawn()
+    {
+
+        audioSource = GetComponent<AudioSource>();
+        gameManager = FindObjectOfType<GameManager>();
+
+
+        if (CompareTag("CueBall"))
+        {
+            ballType = "CueBall";
+            ballNumber = 0;
+        }
+        else if (CompareTag("EightBall"))
+        {
+            ballType = "EightBall";
+            ballNumber = 8;
+        }
+        else if (CompareTag("SolidBall"))
+        {
+            ballType = "SolidBall";
+        }
+        else if (CompareTag("StripedBall"))
+        {
+            ballType = "StripedBall";
+        }
+        BallRigidbody = GetComponent<Rigidbody>();
+
+        if (IsServer)
+        {
+            transform.rotation = Quaternion.Euler(90,0,0);
+        }
+    }
 }

@@ -36,21 +36,17 @@ public class GameManager : NetworkBehaviour
     public NetworkObject cueBallNetworkObject;
     public List<BallController> ballControllers = new List<BallController>();
     public List<NetworkObject> spawnedNetworkBalls = new List<NetworkObject>();
-    public List<CueController> cueControllers = new List<CueController>();
+    public CueController cueController;
     public List<GameObject> ballInHandObjects = new List<GameObject>();
-    public List<BallInHandController> ballInHandControllers = new List<BallInHandController>();
-    private GameObject player1Cue;
-    private GameObject player2Cue;
-    private GameObject player1BallInHand;
-    private GameObject player2BallInHand;
+    public BallInHandController ballInHandController;
+    private GameObject Cue;
+    private GameObject BallInHandHelper;
 
     [Header("Network Variables")]
     public NetworkVariable<int> solidCount = new NetworkVariable<int>(7);
     public NetworkVariable<int> stripedCount = new NetworkVariable<int>(7);
-    public NetworkVariable<NetworkObjectReference> player1CueReference = new NetworkVariable<NetworkObjectReference>();
-    public NetworkVariable<NetworkObjectReference> player2CueReference = new NetworkVariable<NetworkObjectReference>();
-    public NetworkVariable<NetworkObjectReference> player1BallInHandReference = new NetworkVariable<NetworkObjectReference>();
-    public NetworkVariable<NetworkObjectReference> player2BallInHandReference = new NetworkVariable<NetworkObjectReference>();
+    public NetworkVariable<NetworkObjectReference> CueReference = new NetworkVariable<NetworkObjectReference>();
+    public NetworkVariable<NetworkObjectReference> BallInHandHelperReference = new NetworkVariable<NetworkObjectReference>();
     public NetworkVariable<NetworkObjectReference> cueBallReference = new NetworkVariable<NetworkObjectReference>();
     public NetworkVariable<bool> hasExtraTurn = new NetworkVariable<bool>(false);
     public NetworkVariable<bool> freeBall = new NetworkVariable<bool>(false);
@@ -67,7 +63,7 @@ public class GameManager : NetworkBehaviour
 
     // Private Variables
     private bool isTypeAssigned = false;
-    
+    private List<NetworkObject> spawnedNetworkObjects = new List<NetworkObject>();
     private List<GameObject> pocketedBallsThisTurn = new List<GameObject>();
     private bool cueBallPocketed = false;
     private CancellationTokenSource movementCheckCancellationTokenSource;
@@ -100,13 +96,12 @@ public class GameManager : NetworkBehaviour
     }
     public void StartGame()
     {
+        uiController.SetUpTurnText();
         if (IsServer)
         {
             Debug.Log("GameManager: 게임 시작");
-            SpawnCueForPlayer(players[0]);
-            SpawnCueForPlayer(players[1]);
-            SpawnBallInHandHelperForPlayer(players[0]);
-            SpawnBallInHandHelperForPlayer(players[1]);
+            SpawnCue(players[0]);
+            SpawnBallInHandHelper(players[0]);
             SpawnBalls();
             TurnChange();
         }
@@ -114,33 +109,23 @@ public class GameManager : NetworkBehaviour
         {
         }
     }
-    private void SpawnBallInHandHelperForPlayer(ulong clientId)
+    private void SpawnBallInHandHelper(ulong clientId)
     {
         Vector3 pos = new Vector3(0, -2, 0);
         GameObject ballInHand = Instantiate(ballInHandPrefab, pos, Quaternion.identity);
         NetworkObject ballInHandNetworkObject = ballInHand.GetComponent<NetworkObject>();
 
         ballInHandNetworkObject.SpawnWithOwnership(clientId);
+        spawnedNetworkObjects.Add(ballInHandNetworkObject);
+        ballInHandController = ballInHand.GetComponent<BallInHandController>();
 
-        BallInHandController ballInHandController = ballInHand.GetComponent<BallInHandController>();
-        ballInHandController.SetOwnerClientId(clientId);
-
-        ballInHandControllers.Add(ballInHandController);
-
-        if (clientId == player1ClientId.Value)
-        {
-            player1BallInHandReference.Value = new NetworkObjectReference(ballInHandNetworkObject);
-        }
-        else
-        {
-            player2BallInHandReference.Value = new NetworkObjectReference(ballInHandNetworkObject);
-        }
+        BallInHandHelperReference.Value = new NetworkObjectReference(ballInHandNetworkObject);
 
         ballInHandController.meshRenderer = ballInHand.GetComponent<MeshRenderer>();
         ballInHandController.SetTransparency(Color.white, 0.5f);
         ballInHandController.HideHelper();
     }
-    private void SpawnCueForPlayer(ulong clientId)
+    private void SpawnCue(ulong clientId)
     {
         // 큐 생성
         GameObject cue = Instantiate(cuePrefab, Vector3.zero, Quaternion.identity);
@@ -148,24 +133,14 @@ public class GameManager : NetworkBehaviour
 
         // 서버에서 큐 오브젝트를 스폰하고 소유권을 플레이어에게 할당
         cueNetworkObject.SpawnWithOwnership(clientId);
-
+        spawnedNetworkObjects.Add(cueNetworkObject);
         // 해당 플레이어의 큐 컨트롤러 설정 (소유 클라이언트에서만 조작 가능)
-        CueController cueController = cue.GetComponent<CueController>();
+        cueController = cue.GetComponent<CueController>();
         cueController.SetOwnerClientId(clientId);
         cueController.Cue = cue;
-        cueControllers.Add(cueController);
         
-        // 서버에서 해당 플레이어의 큐를 관리하기 위해 저장
-        if (clientId == player1ClientId.Value)
-        {
-            player1CueReference.Value = new NetworkObjectReference(cueNetworkObject);
-            player1Cue = cue;  // player1Cue는 게임 매니저의 멤버 변수
-        }
-        else
-        {
-            player2CueReference.Value = new NetworkObjectReference(cueNetworkObject);
-            player2Cue = cue;  // player2Cue는 게임 매니저의 멤버 변수
-        }
+        CueReference.Value = new NetworkObjectReference(cueNetworkObject);
+        Cue = cue;
         cueController.HideCue();
     }
     private void SpawnBalls()
@@ -175,15 +150,15 @@ public class GameManager : NetworkBehaviour
         cueBall = Instantiate(cueBallPrefab, cueBallPosition, Quaternion.identity);
         cueBallNetworkObject = cueBall.GetComponent<NetworkObject>();
         cueBallNetworkObject.Spawn();
+        spawnedNetworkObjects.Add(cueBallNetworkObject);
         cueBallReference.Value = new NetworkObjectReference(cueBallNetworkObject);
         cueBallController = cueBall.GetComponent<CueBallController>();
-        foreach(var cueController in cueControllers)
-        {
-            cueBallController.cueController = cueController;
-            cueController.CueBall = cueBall.transform;
-            cueController.cueBallController = cueBallController;
-            cueController.hitPointIndicator = GameObject.Find("Canvas/aboutHit/HitIndicator").transform;
-        }
+        cueBallController.cueController = cueController;
+
+        cueController.CueBall = cueBall.transform;
+        cueController.cueBallController = cueBallController;
+        cueController.hitPointIndicator = GameObject.Find("Canvas/aboutHit/HitIndicator").transform;
+
         ballControllers.Add(cueBall.GetComponent<BallController>());
         spawnedNetworkBalls.Add(cueBallNetworkObject);
         Debug.Log($"CueBall spawned at: {cueBallPosition}");
@@ -214,25 +189,19 @@ public class GameManager : NetworkBehaviour
             freeBall.OnValueChanged += HandleFreeBallChange;
             ballsAreMoving.OnValueChanged += HandleBallsMovingChange;
             cueBallReference.OnValueChanged += OnCueBallReferenceChanged;
-            player1CueReference.OnValueChanged += OnPlayer1CueReferenceChanged;
-            player2CueReference.OnValueChanged += OnPlayer2CueReferenceChanged;
-            player1BallInHandReference.OnValueChanged += OnPlayer1BallInHandReferenceChanged;
-            player2BallInHandReference.OnValueChanged += OnPlayer2BallInHandReferenceChanged;
+            CueReference.OnValueChanged += OnCueReferenceChanged;
+            BallInHandHelperReference.OnValueChanged += OnBallInHandHelperReferenceChanged;
 
-            InitializeCueReference(player1CueReference.Value, ref player1Cue);
-            InitializeCueReference(player2CueReference.Value, ref player2Cue);
-            InitializeBallInHandReference(player1BallInHandReference.Value, ref player1BallInHand);
-            InitializeBallInHandReference(player2BallInHandReference.Value, ref player2BallInHand);
+            InitializeCueReference(CueReference.Value, ref Cue);
+            InitializeBallInHandReference(BallInHandHelperReference.Value, ref BallInHandHelper);
         }
-        uiController.SetUpTurnText();
     }
     private void InitializeBallInHandReference(NetworkObjectReference ballInHandReference, ref GameObject ballInHand)
     {
         if (ballInHandReference.TryGet(out NetworkObject ballInHandNetworkObject))
         {
             GameObject ballInHandObject = ballInHandNetworkObject.gameObject;
-            BallInHandController ballInHandController = ballInHandObject.GetComponent<BallInHandController>();
-            ballInHandControllers.Add(ballInHandController);
+            ballInHandController = ballInHandObject.GetComponent<BallInHandController>();
             ballInHand = ballInHandObject;
             ballInHandController.meshRenderer = ballInHand.GetComponent<MeshRenderer>();
             ballInHandController.SetTransparency(Color.white, 0.5f);
@@ -240,41 +209,30 @@ public class GameManager : NetworkBehaviour
         }
     }
 
-    private void OnPlayer1BallInHandReferenceChanged(NetworkObjectReference previousReference, NetworkObjectReference newReference)
+    private void OnBallInHandHelperReferenceChanged(NetworkObjectReference previousReference, NetworkObjectReference newReference)
     {
-        Debug.Log("Player 1 BallInHand Added?");
-        InitializeBallInHandReference(newReference, ref player1BallInHand);
+        Debug.Log("BallInHand Helper Added");
+        InitializeBallInHandReference(newReference, ref BallInHandHelper);
     }
 
-    private void OnPlayer2BallInHandReferenceChanged(NetworkObjectReference previousReference, NetworkObjectReference newReference)
-    {
-        Debug.Log("Player 2 BallInHand Added?");
-        InitializeBallInHandReference(newReference, ref player2BallInHand);
-    }
     private void InitializeCueReference(NetworkObjectReference cueReference, ref GameObject playerCue)
     {
         if (cueReference.TryGet(out NetworkObject cueNetworkObject))
         {
             GameObject cueObject = cueNetworkObject.gameObject;
-            CueController cueController = cueObject.GetComponent<CueController>();
+            cueController = cueObject.GetComponent<CueController>();
             cueController.Cue = cueObject;
-            cueControllers.Add(cueController);
             playerCue = cueObject;
             cueController.HideCue();
         }
     }
 
-    private void OnPlayer1CueReferenceChanged(NetworkObjectReference previousReference, NetworkObjectReference newReference)
+    private void OnCueReferenceChanged(NetworkObjectReference previousReference, NetworkObjectReference newReference)
     {
-        Debug.LogError("Player 1 Cue Added?");
-        InitializeCueReference(newReference, ref player1Cue);
+        Debug.Log("Cue Added");
+        InitializeCueReference(newReference, ref Cue);
     }
 
-    private void OnPlayer2CueReferenceChanged(NetworkObjectReference previousReference, NetworkObjectReference newReference)
-    {
-        Debug.LogError("Player 2 Cue Added?");
-        InitializeCueReference(newReference, ref player2Cue);
-    }
     private void OnCueBallReferenceChanged(NetworkObjectReference previousValue, NetworkObjectReference newValue)
     {
         if (newValue.TryGet(out NetworkObject cueBallNetworkObject))
@@ -284,13 +242,10 @@ public class GameManager : NetworkBehaviour
             cueBallController.cueBallRigidbody = cueBall.GetComponent<Rigidbody>();
             cueBallController.audioSource = cueBall.GetComponent<AudioSource>();
 
-            foreach (var cueController in cueControllers)
-            {
-                cueBallController.cueController = cueController;
-                cueController.CueBall = cueBall.transform;
-                cueController.cueBallController = cueBallController;
-                cueController.hitPointIndicator = GameObject.Find("Canvas/aboutHit/HitIndicator").transform;
-            }
+            cueBallController.cueController = cueController;
+            cueController.CueBall = cueBall.transform;
+            cueController.cueBallController = cueBallController;
+            cueController.hitPointIndicator = GameObject.Find("Canvas/aboutHit/HitIndicator").transform;
         }
     }
     Vector3 mousePos;
@@ -356,6 +311,7 @@ public class GameManager : NetworkBehaviour
             {
                 ball.GetComponent<NetworkObject>().Spawn();
                 spawnedNetworkBalls.Add(ball.GetComponent<NetworkObject>());
+                spawnedNetworkObjects.Add(ball.GetComponent<NetworkObject>());
             }
             ball.transform.rotation = Quaternion.Euler(90f, 0, 0);
             if (currentBallIndex == 7) currentBallIndex++;
@@ -420,8 +376,11 @@ public class GameManager : NetworkBehaviour
         spawnedBalls.Add(num1Ball);
         spawnedBalls.Add(eightBall);
         num1Ball.GetComponent<NetworkObject>().Spawn();
+        spawnedNetworkObjects.Add(num1Ball.GetComponent<NetworkObject>());
         num1Ball.transform.rotation = Quaternion.Euler(90f, 0, 0);
         eightBall.GetComponent<NetworkObject>().Spawn();
+
+        spawnedNetworkObjects.Add(eightBall.GetComponent<NetworkObject>());
         eightBall.transform.rotation = Quaternion.Euler(90f, 0, 0);
     }
 
@@ -806,6 +765,7 @@ public class GameManager : NetworkBehaviour
             // 서버에서 게임 종료 로직 실행
             Debug.Log($"Player {winner.Value} Wins!");
             // 클라이언트에게 게임 종료 알림
+            DestroyAllNetworkedObjects();
             EndGameClientRpc(winner.Value);
         }
     }
@@ -817,40 +777,36 @@ public class GameManager : NetworkBehaviour
         Debug.Log($"Player {winnerPlayer} Wins!");
         DataManager.Instance.WinnerName = winnerPlayer;
         // 씬 전환 등 필요한 작업 수행
+
         sceneLoader.ChangeScene("end");
     }
 
     [ClientRpc]
-    private void StartCueControlClientRpc(int cueControllerIndex)
+    private void StartCueControlClientRpc()
     {
-        if (!IsHost && cueControllerIndex < cueControllers.Count)
+        if (!IsHost)
         {
-            //cueControllers[cueControllerIndex].ShowCue();
-            cueControllers[cueControllerIndex].StartCueControlAsync().Forget();
+            cueController.StartCueControlAsync().Forget();
         }
     }
     [ClientRpc]
     private void StartCueBallControlClientRpc(int ballInHandControllerIndex)
     {
-        if (!IsHost && ballInHandControllerIndex < ballInHandControllers.Count)
+        if (!IsHost)
         {
-            ballInHandControllers[ballInHandControllerIndex].StartFreeBallPlacement().Forget();
+            ballInHandController.StartFreeBallPlacement().Forget();
         }
     }
 
     void TurnChange()
     {
-
-        
         if (playerTurn.Value == 0)
         {
             playerTurn.Value = 1;
-            cueControllers[0].ShowCue();
-            cueControllers[1].HideCue();
             
             NotifyTurnChangedClientRpc(playerTurn.Value);
 
-            cueControllers[0].StartCueControlAsync().Forget();
+            cueController.StartCueControlAsync().Forget();
 
             return;
         }
@@ -865,7 +821,6 @@ public class GameManager : NetworkBehaviour
         if (cueBallPocketed)
         {
             SetFreeBallServerRpc(true);
-            AssignCueBallOwnershipServerRpc();
         }
         else
         {
@@ -873,34 +828,15 @@ public class GameManager : NetworkBehaviour
         }
         int cueIndex = playerTurn.Value == 1 ? 0 : 1;
 
+        AssignCueOwnershipServerRpc();
         if (freeBall.Value)
         {
-            ballInHandControllers[cueIndex].StartFreeBallPlacement().Forget();
+            ballInHandController.StartFreeBallPlacement().Forget();
             StartCueBallControlClientRpc(cueIndex);
         }
 
-        //if (playerTurn.Value == 1)
-        //{
-        //    cueControllers[0].ShowCue();
-        //    cueControllers[1].HideCue();
-        //}
-        //else
-        //{
-        //    cueControllers[1].ShowCue();
-        //    cueControllers[0].HideCue();
-        //}
-
-
-        if (playerTurn.Value == 1)
-        {
-            cueControllers[0].StartCueControlAsync().Forget();
-        }
-        else
-        {
-            cueControllers[1].StartCueControlAsync().Forget();
-        }
-
-        StartCueControlClientRpc(playerTurn.Value == 1 ? 0 : 1);
+        cueController.StartCueControlAsync().Forget();
+        StartCueControlClientRpc();
 
         pocketedBallsThisTurn.Clear();
         cueBallPocketed = false;
@@ -945,13 +881,13 @@ public class GameManager : NetworkBehaviour
         }
         else
         {
-            // 자신의 공이 아닌 공을 포켓했을 경우
-            if (pocketedBallsThisTurn.Any(ball => ball.CompareTag(GetOpponentType(playerTurn.Value))))
-            {
-                hasExtraTurn.Value = false;
-                TurnChange();
-                return;
-            }
+        //    // 자신의 공이 아닌 공을 포켓했을 경우
+        //    if (pocketedBallsThisTurn.Any(ball => ball.CompareTag(GetOpponentType(playerTurn.Value))))
+        //    {
+        //        hasExtraTurn.Value = false;
+        //        TurnChange();
+        //        return;
+        //    }
         }
 
         isFirstTime.Value = false;
@@ -965,8 +901,8 @@ public class GameManager : NetworkBehaviour
             hasExtraTurn.Value = false;
             pocketedBallsThisTurn.Clear();
             //cueControllers[playerTurn.Value - 1].ShowCue();
-            cueControllers[playerTurn.Value - 1].StartCueControlAsync().Forget();
-            StartCueControlClientRpc(playerTurn.Value - 1);
+            cueController.StartCueControlAsync().Forget();
+            StartCueControlClientRpc();
         }
     }
 
@@ -1062,7 +998,7 @@ public class GameManager : NetworkBehaviour
     }
 
     [ServerRpc]
-    private void AssignCueBallOwnershipServerRpc()
+    private void AssignCueOwnershipServerRpc()
     {
         if (players.Count == 0)
         {
@@ -1072,6 +1008,8 @@ public class GameManager : NetworkBehaviour
         
         ulong currentPlayerId = players[playerTurn.Value-1];
         //cueBallNetworkObject.ChangeOwnership(currentPlayerId);
+        Cue.GetComponent<NetworkObject>().ChangeOwnership(currentPlayerId);
+        BallInHandHelper.GetComponent<NetworkObject>().ChangeOwnership(currentPlayerId);
         Debug.Log($"cueball ownership changed to player {currentPlayerId}");
     }
 
@@ -1107,5 +1045,35 @@ public class GameManager : NetworkBehaviour
     internal void CompleteBallInHandServerRpc(Vector3 newPosition)
     {
         cueBallController.CompleteBallInHandServerRpc(newPosition);
+        cueController.ShowCue();
+    }
+
+    [ContextMenu("Destroy All Networked Objects")]
+    public void DestroyAllNetworkedObjects()
+    {
+
+        Debug.Log("Destroying all networked objects...");
+
+        // 복사본을 만들어 리스트를 순회
+        List<NetworkObject> objectsToDestroy = new List<NetworkObject>(spawnedNetworkObjects);
+
+        foreach (NetworkObject networkObject in objectsToDestroy)
+        {
+            if (networkObject != null)
+            {
+                networkObject.Despawn(true);
+                spawnedNetworkObjects.Remove(networkObject);
+                Debug.Log($"Destroyed networked object: {networkObject.name}");
+            }
+        }
+        foreach (var client in NetworkManager.Singleton.ConnectedClientsList)
+        {
+            if (client.PlayerObject != null && client.PlayerObject.IsSpawned)
+            {
+                client.PlayerObject.Despawn(true);
+                Debug.Log($"Destroyed player object for client {client.ClientId}");
+            }
+        }
+        Debug.Log("All networked objects have been destroyed.");
     }
 }

@@ -43,8 +43,9 @@ public class CueBallController : NetworkBehaviour
             // 회전력(토크) 적용
             cueBallRigidbody.AddTorque(torqueAxis * torqueMagnitude, ForceMode.Impulse);
 
-            PlayCueBallHitAudioClientRpc();
         }
+
+        PlayCueBallHitAudioClientRpc();
     }
     [ClientRpc]
     void PlayCueBallHitAudioClientRpc()
