@@ -1,3 +1,4 @@
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 public class RandomBGMPlayer : MonoBehaviour
@@ -5,7 +6,24 @@ public class RandomBGMPlayer : MonoBehaviour
     public AudioSource audioSource;  // 배경음악을 재생할 AudioSource
     public AudioClip[] bgmClips;     // 재생할 배경음악 클립 배열
 
-    void Start()
+    private void Start()
+    {
+        WaitUntilStart().Forget();
+    }
+
+    async UniTaskVoid WaitUntilStart()
+    {
+        if (GameManager.Instance != null)
+        {
+            await UniTask.WaitUntil(() => GameManager.Instance.playerTurn.Value >= 1);
+            StartMusic();
+        }
+        else
+        {
+            Debug.LogError("GameManager 인스턴스를 찾을 수 없습니다.");
+        }
+    }
+    public void StartMusic()
     {
         if (bgmClips.Length > 0)
         {

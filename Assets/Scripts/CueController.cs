@@ -57,7 +57,7 @@ public class CueController : NetworkBehaviour
         ShowCue();
         while (GameManager.Instance.GetMyPlayerNumber() != GameManager.Instance.playerTurn.Value || !IsOwner)
         {
-            Debug.Log($"not your turn{GameManager.Instance.GetMyPlayerNumber()} {GameManager.Instance.playerTurn.Value}");
+            //Debug.Log($"not your turn{GameManager.Instance.GetMyPlayerNumber()} {GameManager.Instance.playerTurn.Value}");
             count++;
 
             await UniTask.Delay(100);
@@ -185,7 +185,7 @@ public class CueController : NetworkBehaviour
     [ClientRpc]
     void ApplyShootClientRpc(Vector3 direction, float power, Vector2 hitPoint)
     {
-        if (IsOwner)
+        if (IsOwner||IsHost)
             return;
         // 로컬에서 샷 적용
         cueBallController.HitBall(direction, power, hitPoint);
@@ -194,6 +194,7 @@ public class CueController : NetworkBehaviour
     
     IEnumerator HitBall()
     {
+        if (isHitting) yield break;
         isHitting = true;
 
         float animTime = 0.2f;
@@ -230,7 +231,7 @@ public class CueController : NetworkBehaviour
     [ServerRpc(RequireOwnership = false)]
     internal void SetHitPointServerRPC(Vector2 normalizedPoint)
     {
-        if (IsOwner) SetHitPointClientRPC(normalizedPoint);
+        SetHitPointClientRPC(normalizedPoint);
     }
     [ClientRpc]
     internal void SetHitPointClientRPC(Vector2 normalizedPoint)

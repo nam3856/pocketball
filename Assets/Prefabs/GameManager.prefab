@@ -48,7 +48,7 @@ MonoBehaviour:
   GlobalObjectIdHash: 3722897733
   InScenePlacedSourceGlobalObjectIdHash: 3722897733
   AlwaysReplicateAsRoot: 0
-  SynchronizeTransform: 1
+  SynchronizeTransform: 0
   ActiveSceneSynchronization: 0
   SceneMigrationSynchronization: 1
   SpawnWithObservers: 1
@@ -154,9 +154,9 @@ MonoBehaviour:
   cueBallNetworkObject: {fileID: 0}
   ballControllers: []
   spawnedNetworkBalls: []
-  cueControllers: []
+  cueController: {fileID: 0}
   ballInHandObjects: []
-  ballInHandControllers: []
+  ballInHandController: {fileID: 0}
   solidCount:
     m_InternalValue: 7
   stripedCount:

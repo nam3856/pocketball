@@ -2,6 +2,7 @@ using UnityEngine;
 using Unity.Netcode;
 using UnityEngine.UI;
 using Unity.Collections;
+using System.Collections;
 
 public class PlayerName : NetworkBehaviour
 {
@@ -15,13 +16,24 @@ public class PlayerName : NetworkBehaviour
     {
         if (IsOwner)
         {
-            // 서버에 플레이어 이름 설정 요청
-            SetPlayerNameServerRpc(GameSettings.Instance.PlayerName);
+            StartCoroutine(WaitForGameSettings());
         }
 
         // 이름이 변경될 때 UI 업데이트
         PlayerNameVar.OnValueChanged += OnPlayerNameChanged;
         UpdateNameText(PlayerNameVar.Value.ToString()); // FixedString32Bytes 타입을 string으로 변환
+
+    }
+
+    private IEnumerator WaitForGameSettings()
+    {
+        while (GameSettings.Instance == null || !GameSettings.Instance.NetworkObject.IsSpawned)
+        {
+            yield return null;
+        }
+
+        // 서버에 플레이어 이름 설정 요청
+        SetPlayerNameServerRpc(OwnerClientId, GameSettings.Instance.PlayerName);
     }
 
     public override void OnNetworkDespawn()
@@ -31,9 +43,10 @@ public class PlayerName : NetworkBehaviour
     }
 
     [ServerRpc]
-    private void SetPlayerNameServerRpc(string name)
+    private void SetPlayerNameServerRpc(ulong clientId, string name)
     {
         // FixedString32Bytes로 변환하여 NetworkVariable에 할당
+        GameSettings.Instance.SetPlayerNameServerRpc(clientId, name);
         PlayerNameVar.Value = name;
     }
 

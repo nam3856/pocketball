@@ -15,19 +15,28 @@ public class BallController : NetworkBehaviour
     public int ballNumber = 0;
     public string ballType;
     public NetworkVariable<Vector3> NetworkPosition = new NetworkVariable<Vector3>(writePerm: NetworkVariableWritePermission.Server);
+    public NetworkVariable<Quaternion> NetworkRotation = new NetworkVariable<Quaternion>(writePerm: NetworkVariableWritePermission.Server);
     public NetworkVariable<Vector3> NetworkVelocity = new NetworkVariable<Vector3>(writePerm: NetworkVariableWritePermission.Server);
+    public NetworkVariable<Vector3> NetworkAngularVelocity = new NetworkVariable<Vector3>(writePerm: NetworkVariableWritePermission.Server);
     private readonly float correctionFactor = 0.1f;
     private readonly float positionThreshold = 0.01f;
     private readonly float velocityThreshold = 0.1f;
+    private readonly float angularVelocityThreshold = 0.1f;
     private readonly float angleThreshold = 30f;
 
     int count = 0;
     void FixedUpdate()
     {
+        count = (count + 1) % 1001;
         if (IsServer)
         {
             NetworkPosition.Value = transform.position;
             NetworkVelocity.Value = BallRigidbody.velocity;
+            NetworkAngularVelocity.Value = BallRigidbody.angularVelocity;
+            if (count % 5 == 0)
+            {
+                NetworkRotation.Value = transform.rotation;
+            }
         }
         else
         {
@@ -35,23 +44,30 @@ public class BallController : NetworkBehaviour
             {
                 Vector3 positionError = NetworkPosition.Value - transform.position;
                 Vector3 velocityError = NetworkVelocity.Value - BallRigidbody.velocity;
+                Vector3 angularVelocityError = NetworkAngularVelocity.Value - BallRigidbody.angularVelocity;
+                if (count % 5 == 0)
+                {
+                    transform.rotation = NetworkRotation.Value;
+                }
                 float angleDifference = Vector3.Angle(BallRigidbody.velocity, NetworkVelocity.Value);
                 if (angleDifference > angleThreshold)
                 {
                     // 방향 변화가 큰 경우 즉시 서버의 상태로 동기화
                     transform.position = NetworkPosition.Value;
                     BallRigidbody.velocity = NetworkVelocity.Value;
+                    BallRigidbody.angularVelocity = NetworkAngularVelocity.Value;
                 }
                 else
                 {
                     if (positionError.magnitude > positionThreshold) transform.position = Vector3.Lerp(transform.position, NetworkPosition.Value, correctionFactor);
                     if (velocityError.magnitude > velocityThreshold) BallRigidbody.velocity = Vector3.Lerp(BallRigidbody.velocity, NetworkVelocity.Value, correctionFactor);
+                    if (angularVelocityError.magnitude > angularVelocityThreshold) 
+                        BallRigidbody.angularVelocity = Vector3.Lerp(BallRigidbody.angularVelocity, NetworkAngularVelocity.Value, correctionFactor);
                 }
                 
             }
             else
             {
-                count++;
                 if(count == 1000)
                 {
                     transform.position = NetworkPosition.Value;
@@ -149,17 +165,23 @@ public class BallController : NetworkBehaviour
 
     private IEnumerator BallFellToFloor()
     {
-        Vector3 respawnPosition = new Vector3(5.475f, 0.33f, 0.805f);
-        float ballRadius = 0.32f;
-        float checkRadius = ballRadius * 1.1f;
-
-        bool positionFound = false;
-        int maxAttempts = 100;
+        
         while (!gameManager.AreAllBallsStopped())
         {
             yield return null; // 다음 프레임까지 대기
         }
 
+        ResetBallPositionServerRpc();
+    }
+    [ServerRpc(RequireOwnership = false)]
+    private void ResetBallPositionServerRpc()
+    {
+        Vector3 respawnPosition = new Vector3(5.475f, 0.33f, 0f);
+        float ballRadius = 0.32f;
+        float checkRadius = ballRadius * 1.1f;
+
+        bool positionFound = false;
+        int maxAttempts = 100;
         for (int i = 0; i < maxAttempts; i++)
         {
             // 일정 범위 내에서 무작위 오프셋을 적용하여 위치 시도
@@ -194,8 +216,23 @@ public class BallController : NetworkBehaviour
         }
 
         transform.position = respawnPosition;
+        transform.rotation = Quaternion.Euler(90f, 0, 0);
         BallRigidbody.velocity = Vector3.zero;
         BallRigidbody.angularVelocity = Vector3.zero;
+
+        NetworkPosition.Value = transform.position;
+        NetworkVelocity.Value = BallRigidbody.velocity;
+        NetworkAngularVelocity.Value = Vector3.zero;
+
+        ForceSetBallClientRpc();
+    }
+
+    [ClientRpc]
+    private void ForceSetBallClientRpc()
+    {
+        transform.position = NetworkPosition.Value;
+        BallRigidbody.velocity = NetworkVelocity.Value;
+        transform.rotation = NetworkRotation.Value;
     }
 
     public override void OnNetworkSpawn()
@@ -225,9 +262,5 @@ public class BallController : NetworkBehaviour
         }
         BallRigidbody = GetComponent<Rigidbody>();
 
-        if (IsServer)
-        {
-            transform.rotation = Quaternion.Euler(90,0,0);
-        }
     }
 }

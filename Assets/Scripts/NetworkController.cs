@@ -1,45 +1,54 @@
+using System.Collections.Generic;
+using TMPro;
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class NetworkController : MonoBehaviour
 {
+    public TextMeshProUGUI stateText;
+
+    public void SetStateText(string text)
+    {
+        stateText.text = text;
+    }
     void Start()
     {
-#if !UNITY_EDITOR
-        // Unity 에디터 환경에서 실행되는 코드
-        if (!NetworkManager.Singleton.StartHost())
+        if (GameSettings.Instance.StartAsHost)
         {
-            Debug.LogWarning("호스트 시작 실패");
-
-            
-            NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnected;
-            NetworkManager.Singleton.StartClient();
+            if (!NetworkManager.Singleton.StartHost())
+            {
+                Debug.LogWarning("호스트 시작 실패");
+                if (stateText != null) SetStateText("방 만들기 실패...\n만들어져 있는 방 찾는 중...");
+                NetworkManager.Singleton.StartClient();
+            }
+            else
+            {
+                if (stateText != null) SetStateText("다른 플레이어 참가를 기다리는 중...");
+            }
         }
+        // Unity 에디터 환경에서 실행되는 코드
         else
         {
-            Debug.Log("호스트 시작 시도 중...");
-            NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnected;
+            if (!NetworkManager.Singleton.StartClient())
+            {
+                Debug.LogWarning("클라이언트 시작 실패");
+                if (stateText != null) SetStateText("방 들어가기 실패...\n새로운 방 만드는 중...");
+                if (!NetworkManager.Singleton.StartHost())
+                {
+                    Debug.LogWarning("호스트 시작 실패");
+                }
+                else
+                {
+                }
+            }
+            else
+            {
+                Debug.Log("클라이언트 시작 시도 중...");
+                if (stateText != null) SetStateText("만들어져 있는 방 찾는 중...");
+            }
         }
-#else
-    // 빌드된 버전에서 실행되는 코드
-    if (!NetworkManager.Singleton.StartClient())
-    {
-        Debug.LogWarning("클라이언트 시작 실패. 호스트로 전환합니다.");
-        NetworkManager.Singleton.StartHost();
+        
     }
-    else
-    {
-        Debug.Log("클라이언트 시작 시도 중...");
-        NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnected;
-    }
-#endif
-    }
-
-
-
-    private void OnClientDisconnected(ulong clientId)
-    {
-        Debug.Log($"클라이언트 {clientId}가 연결을 끊었습니다.");
-        // 필요 시 추가 로직
-    }
+    
 }

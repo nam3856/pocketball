@@ -1,80 +1,118 @@
+using Cysharp.Threading.Tasks;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
+using Unity.Collections;
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 public class UIController : MonoBehaviour
 {
     public TextMeshProUGUI turnText;
-    public TextMeshProUGUI score;
+    public TextMeshProUGUI scoreText;
+    public TextMeshProUGUI playerTypeText;
+    public GameObject loadingPanel;
+    private GameManager gameManager;
 
-    private void Start()
+    void Start()
     {
-        
+        WaitUntilStart().Forget();
     }
-
-    public void SetUpTurnText()
+    
+    async UniTaskVoid WaitUntilStart()
     {
-        if (GameManager.Instance != null)
+        gameManager = GameManager.Instance;
+        if (gameManager != null)
         {
-            // 현재 턴 값을 UI에 초기 설정
-            UpdateTurnText(GameManager.Instance.playerTurn.Value);
+            await UniTask.WaitUntil(() => gameManager.playerTurn.Value >= 1);
+            // 초기 점수 설정
+            UpdateScore(gameManager.solidCount.Value, gameManager.stripedCount.Value);
 
-            // 턴이 변경될 때마다 호출될 콜백 등록
-            GameManager.Instance.playerTurn.OnValueChanged += OnPlayerTurnChanged;
+            // GameManager의 점수 변경 이벤트에 구독
+            gameManager.solidCount.OnValueChanged += OnSolidCountChanged;
+            gameManager.stripedCount.OnValueChanged += OnStripedCountChanged;
+            gameManager.player1Type.OnValueChanged += OnplayerTypeChanged;
+            gameManager.player2Type.OnValueChanged += OnplayerTypeChanged;
         }
         else
         {
             Debug.LogError("UIController: GameManager 인스턴스를 찾을 수 없습니다.");
         }
+        loadingPanel.SetActive(false);
     }
 
-    private void UpdateTurnText(int turnIndex)
+    private void OnplayerTypeChanged(FixedString32Bytes previousValue, FixedString32Bytes newValue)
+    {
+        UpdatePlayerType();
+    }
+
+    public void UpdateTurnText(int turnIndex)
     {
         if (GameManager.Instance.players.Count >= turnIndex)
         {
-            ulong playerId = GameManager.Instance.players[turnIndex-1];
+            ulong playerId = GameManager.Instance.players[turnIndex - 1];
             string playerName = GetPlayerName(playerId);
-            turnText.text = $"Turn: Player {playerName}";
+            turnText.text = $"{playerName} 님의 차례";
         }
         else
         {
-            turnText.text = "Turn: Unknown";
+            turnText.text = "게임 시작 전";
         }
     }
 
     private string GetPlayerName(ulong playerId)
     {
-        if (NetworkManager.Singleton.IsServer)
+        var gameSettings = GameSettings.Instance;
+        if (gameSettings.clientPlayerNames.TryGetValue(playerId, out string playerName))
         {
-            if (NetworkManager.Singleton.ConnectedClients.TryGetValue(playerId, out var client))
-            {
-                if (client.PlayerObject != null)
-                {
-                    var playerNameComponent = client.PlayerObject.GetComponent<PlayerName>();
-                    if (playerNameComponent != null)
-                    {
-                        return playerNameComponent.PlayerNameVar.Value.ToString();
-                    }
-                }
-            }
+            return playerName;
         }
-        return playerId.ToString(); // 기본적으로 ClientId 반환
+
+        // 이름을 찾지 못한 경우 기본적으로 ClientId를 문자열로 반환합니다
+        return playerId.ToString();
     }
 
-    private void OnPlayerTurnChanged(int previousValue, int newValue)
+
+    private void OnSolidCountChanged(int previousValue, int newValue)
     {
-        UpdateTurnText(newValue);
+        UpdateScore(newValue, gameManager.stripedCount.Value);
+        Debug.Log("UIController: OnSolidCountChanged");
     }
+
+    private void OnStripedCountChanged(int previousValue, int newValue)
+    {
+        UpdateScore(gameManager.solidCount.Value, newValue);
+        Debug.Log("UIController: OnStripedCountChanged");
+    }
+    
+    public void UpdateScore(int solid, int striped)
+    {
+        scoreText.text = $"Solid Balls: {solid}\nStriped Balls: {striped}";
+    }
+
+    public void UpdatePlayerType()
+    {
+        int myPlayerNumber = gameManager.GetMyPlayerNumber();
+        string playerType = gameManager.GetPlayerType(myPlayerNumber);
+
+        if (!string.IsNullOrEmpty(playerType))
+        {
+            playerTypeText.text = $"Your Type: {playerType}";
+        }
+        else
+        {
+            playerTypeText.text = "Your Type: Not Assigned";
+        }
+    }
+
     void OnDestroy()
     {
         if (GameManager.Instance != null)
         {
-            GameManager.Instance.playerTurn.OnValueChanged -= OnPlayerTurnChanged;
+            gameManager.solidCount.OnValueChanged -= OnSolidCountChanged;
+            gameManager.stripedCount.OnValueChanged -= OnStripedCountChanged;
         }
-    }
-    private void UpdateScore(int solid, int striped) {
-        //score.text = "Player 1: " + solid + "\nPlayer 2: " + striped;
     }
 }

@@ -10,8 +10,8 @@ public class BallInHandController : NetworkBehaviour
 
     private readonly float tableMinX = -7.5f;
     private readonly float tableMaxX = 7.5f;
-    private readonly float tableMinZ = -3.5f;
-    private readonly float tableMaxZ = 3.5f;
+    private readonly float tableMinZ = -3.66f;
+    private readonly float tableMaxZ = 3.66f;
 
     public override void OnNetworkSpawn()
     {
@@ -45,9 +45,10 @@ public class BallInHandController : NetworkBehaviour
         await UniTask.Delay(100);
         int count = 0;
         ShowHelper();
+        if (meshRenderer.material.color != Color.white) UpdateColorServerRpc(Color.white, 0.5f);
         while (GameManager.Instance.GetMyPlayerNumber() != GameManager.Instance.playerTurn.Value || !IsOwner)
         {
-            Debug.Log($"not your turn{GameManager.Instance.GetMyPlayerNumber()} {GameManager.Instance.playerTurn.Value}");
+            //Debug.Log($"not your turn{GameManager.Instance.GetMyPlayerNumber()} {GameManager.Instance.playerTurn.Value}");
             count++;
 
             await UniTask.Delay(100);

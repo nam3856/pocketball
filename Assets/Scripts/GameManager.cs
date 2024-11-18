@@ -1,5 +1,6 @@
 using Cysharp.Threading.Tasks;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -69,45 +70,75 @@ public class GameManager : NetworkBehaviour
     private CancellationTokenSource movementCheckCancellationTokenSource;
     private List<Material> usedMaterials = new List<Material>();
     private UIController uiController;
-    private void OnClientConnected(ulong clientId)
+    public override void OnNetworkSpawn()
     {
-        if (!players.Contains(clientId))
-        {
-            players.Add(clientId);
-            Debug.Log($"플레이어 {clientId}가 게임에 참여했습니다.");
+        base.OnNetworkSpawn();
+        uiController = FindObjectOfType<UIController>();
+        //solidCount.OnValueChanged += OnSolidCountChanged;
+        //stripedCount.OnValueChanged += OnStripedCountChanged;
+        playerTurn.OnValueChanged += OnPlayerTurnChanged;
 
-            // 최소 플레이어 수에 도달하면 게임 시작
-            if (players.Count >= 2)
+        if (IsServer)
+        {
+            int playerIndex = 1;
+            foreach (var client in NetworkManager.Singleton.ConnectedClientsList)
             {
-                StartGame();
+                ulong clientId = client.ClientId;
+                if (playerIndex == 1)
+                {
+                    player1ClientId.Value = clientId;
+                }
+                else if (playerIndex == 2)
+                {
+                    player2ClientId.Value = clientId;
+                }
+                playerIndex++;
             }
-        }
-    }
 
-    private void OnClientDisconnected(ulong clientId)
-    {
-        if (players.Contains(clientId))
+            players.Add(player1ClientId.Value);
+            players.Add(player2ClientId.Value);
+            solidCount.Value = 7;
+            stripedCount.Value = 7;
+            playerTurn.Value = 0;
+            isFirstTime.Value = true;
+
+            
+        }
+        if (IsClient)
         {
-            players.Remove(clientId);
-            Debug.Log($"플레이어 {clientId}가 게임에서 떠났습니다.");
+            players.OnListChanged += OnPlayersChanged;
+            freeBall.OnValueChanged += HandleFreeBallChange;
+            ballsAreMoving.OnValueChanged += HandleBallsMovingChange;
+            cueBallReference.OnValueChanged += OnCueBallReferenceChanged;
+            CueReference.OnValueChanged += OnCueReferenceChanged;
+            BallInHandHelperReference.OnValueChanged += OnBallInHandHelperReferenceChanged;
 
-            // 플레이어 수가 줄어들면 게임 종료 또는 대기 상태로 전환
+            InitializeCueReference(CueReference.Value, ref Cue);
+            InitializeBallInHandReference(BallInHandHelperReference.Value, ref BallInHandHelper);
         }
+        StartCoroutine(WaitUntilAllLoaded());
     }
+
+    private IEnumerator WaitUntilAllLoaded()
+    {
+        while (!GameSettings.Instance.AllLoaded)
+        {
+            yield return null;
+        }
+        StartGame();
+    }
+
     public void StartGame()
     {
-        uiController.SetUpTurnText();
         if (IsServer)
         {
             Debug.Log("GameManager: 게임 시작");
-            SpawnCue(players[0]);
-            SpawnBallInHandHelper(players[0]);
+            SpawnCue(player1ClientId.Value);
+            SpawnBallInHandHelper(player1ClientId.Value);
             SpawnBalls();
             TurnChange();
         }
-        else
-        {
-        }
+
     }
     private void SpawnBallInHandHelper(ulong clientId)
     {
@@ -166,36 +197,7 @@ public class GameManager : NetworkBehaviour
         // 2. 삼각형 형태로 15개의 공 스폰 (오른쪽 끝)
         SpawnBallTriangle();
     }
-    public override void OnNetworkSpawn()
-    {
-        base.OnNetworkSpawn();
-        NetworkManager.Singleton.OnClientConnectedCallback += OnClientConnected;
-        NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnected;
-        solidCount.OnValueChanged += OnSolidCountChanged;
-        stripedCount.OnValueChanged += OnStripedCountChanged;
-        playerTurn.OnValueChanged += OnPlayerTurnChanged;
-
-        if (IsServer)
-        {
-            NetworkManager.OnClientConnectedCallback += OnClientConnectedCallback;
-            solidCount.Value = 7;
-            stripedCount.Value = 7;
-            playerTurn.Value = 0;
-            isFirstTime.Value = true;
-        }
-        if (IsClient)
-        {
-            players.OnListChanged += OnPlayersChanged;
-            freeBall.OnValueChanged += HandleFreeBallChange;
-            ballsAreMoving.OnValueChanged += HandleBallsMovingChange;
-            cueBallReference.OnValueChanged += OnCueBallReferenceChanged;
-            CueReference.OnValueChanged += OnCueReferenceChanged;
-            BallInHandHelperReference.OnValueChanged += OnBallInHandHelperReferenceChanged;
-
-            InitializeCueReference(CueReference.Value, ref Cue);
-            InitializeBallInHandReference(BallInHandHelperReference.Value, ref BallInHandHelper);
-        }
-    }
+    
     private void InitializeBallInHandReference(NetworkObjectReference ballInHandReference, ref GameObject ballInHand)
     {
         if (ballInHandReference.TryGet(out NetworkObject ballInHandNetworkObject))
@@ -250,10 +252,6 @@ public class GameManager : NetworkBehaviour
     }
     Vector3 mousePos;
 
-    private void Update()
-    {
-        mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-    }
     private void OnPlayersChanged(NetworkListEvent<ulong> changeEvent)
     {
         Debug.LogError($"Players list updated. Count: {players.Count}");
@@ -285,18 +283,19 @@ public class GameManager : NetworkBehaviour
         Vector3 triangleOrigin = new Vector3(2, 0.33f, 0);
         Vector3 tableDirection = (tableRightEnd - tableLeftEnd).normalized;
         Vector3 perpendicular = Vector3.Cross(tableDirection, Vector3.up).normalized;
+        Quaternion initialRotation = Quaternion.Euler(90f, 0, 0);
         int currentBallIndex = 1;
         int rowCount = 1;
         List<GameObject> spawnedBalls = new List<GameObject>();
 
         // 1번 줄 - 1번 공
-        GameObject num1Ball = Instantiate(ball1Prefab, GetPositionInTriangle(triangleOrigin, tableDirection, perpendicular, rowCount++, 0), Quaternion.identity);
+        GameObject num1Ball = Instantiate(ball1Prefab, GetPositionInTriangle(triangleOrigin, tableDirection, perpendicular, rowCount++, 0), initialRotation);
 
         // 2번 줄 - 줄무늬 랜덤, 단색 랜덤
         SpawnRow(triangleOrigin, tableDirection, perpendicular, rowCount++, new[] { "striped", "solid" }, spawnedBalls);
 
         // 3번 줄 - 단색 랜덤, 8번 공, 줄무늬 랜덤
-        eightBall = Instantiate(ball8Prefab, GetPositionInTriangle(triangleOrigin, tableDirection, perpendicular, rowCount, 1), Quaternion.identity);
+        eightBall = Instantiate(ball8Prefab, GetPositionInTriangle(triangleOrigin, tableDirection, perpendicular, rowCount, 1), initialRotation);
         SpawnRow(triangleOrigin, tableDirection, perpendicular, rowCount++, new[] { "solid", "striped" }, spawnedBalls, 1);
 
         // 4번 줄 - 줄무늬 랜덤, 단색 랜덤, 줄무늬 랜덤, 단색 랜덤
@@ -313,9 +312,7 @@ public class GameManager : NetworkBehaviour
                 spawnedNetworkBalls.Add(ball.GetComponent<NetworkObject>());
                 spawnedNetworkObjects.Add(ball.GetComponent<NetworkObject>());
             }
-            ball.transform.rotation = Quaternion.Euler(90f, 0, 0);
             if (currentBallIndex == 7) currentBallIndex++;
-
             BallController ballController = ball.GetComponent<BallController>();
 
             string materialPath = "";
@@ -368,7 +365,6 @@ public class GameManager : NetworkBehaviour
             ballController.ballNumber = currentBallIndex + 1;
             ballController.BallRigidbody = ball.GetComponent<Rigidbody>();
             ballControllers.Add(ballController);
-
             currentBallIndex++;
         }
 
@@ -377,29 +373,28 @@ public class GameManager : NetworkBehaviour
         spawnedBalls.Add(eightBall);
         num1Ball.GetComponent<NetworkObject>().Spawn();
         spawnedNetworkObjects.Add(num1Ball.GetComponent<NetworkObject>());
-        num1Ball.transform.rotation = Quaternion.Euler(90f, 0, 0);
         eightBall.GetComponent<NetworkObject>().Spawn();
 
         spawnedNetworkObjects.Add(eightBall.GetComponent<NetworkObject>());
-        eightBall.transform.rotation = Quaternion.Euler(90f, 0, 0);
     }
 
     private void SpawnRow(Vector3 origin, Vector3 direction, Vector3 perpendicular, int row, string[] types, List<GameObject> spawnedBalls, int skipIndex = -1)
     {
+        Quaternion initialRotation = Quaternion.Euler(90f, 0, 0);
         for (int i = 0; i < types.Length; i++)
         {
             if (i == skipIndex)
             {
                 Vector3 position = GetPositionInTriangle(origin, direction, perpendicular, row, i + 1);
                 GameObject prefab = GetBallPrefabType(types[i]);
-                GameObject ball = Instantiate(prefab, position, Quaternion.identity);
+                GameObject ball = Instantiate(prefab, position, initialRotation);
                 spawnedBalls.Add(ball);
             }
             else
             {
                 Vector3 position = GetPositionInTriangle(origin, direction, perpendicular, row, i);
                 GameObject prefab = GetBallPrefabType(types[i]);
-                GameObject ball = Instantiate(prefab, position, Quaternion.identity);
+                GameObject ball = Instantiate(prefab, position, initialRotation);
                 spawnedBalls.Add(ball);
             }
         }
@@ -463,13 +458,12 @@ public class GameManager : NetworkBehaviour
 
     void Awake()
     {
-
         players = new NetworkList<ulong>();
         // 싱글톤 패턴 구현
         if (Instance == null)
         {
             Instance = this;
-            DontDestroyOnLoad(gameObject); // 필요한 경우 씬 전환 시에도 유지
+            //DontDestroyOnLoad(gameObject);
         }
         else
         {
@@ -477,39 +471,20 @@ public class GameManager : NetworkBehaviour
         }
     }
 
-    void Start()
-    {
-        uiController= FindObjectOfType<UIController>();
 
-    }
+    
 
-    private void OnClientConnectedCallback(ulong clientId)
-    {
-        if (player1ClientId.Value == 0)
-        {
-            player1ClientId.Value = clientId;
-            Debug.LogError($"Player 1 connected: {clientId}");
-        }
-        else if (player2ClientId.Value == 0)
-        {
-            player2ClientId.Value = clientId;
-            Debug.LogError($"Player 2 connected: {clientId}");
-        }
-        else
-        {
-            Debug.LogError("더 이상 플레이어를 받을 수 없습니다.");
-        }
-    }
+    //private void OnSolidCountChanged(int previousValue, int newValue)
+    //{
+    //    uiController.UpdateScore(newValue, stripedCount.Value);
+    //    Debug.Log("GameManager: OnSolidCountChanged");
+    //}
 
-    private void OnSolidCountChanged(int previousValue, int newValue)
-    {
-        // 클라이언트 측에서 UI 업데이트 등 처리
-    }
-
-    private void OnStripedCountChanged(int previousValue, int newValue)
-    {
-        // 클라이언트 측에서 UI 업데이트 등 처리
-    }
+    //private void OnStripedCountChanged(int previousValue, int newValue)
+    //{
+    //    uiController.UpdateScore(solidCount.Value,newValue);
+    //    Debug.Log("GameManager: OnStripedCountChanged");
+    //}
 
     private void OnPlayerTurnChanged(int previousValue, int newValue)
     {
@@ -525,7 +500,7 @@ public class GameManager : NetworkBehaviour
             return 0; // 할당되지 않음
     }
 
-    string GetPlayerType(int playerId)
+    public string GetPlayerType(int playerId)
     {
         if (playerId == 1)
         {
@@ -846,9 +821,7 @@ public class GameManager : NetworkBehaviour
     [ClientRpc]
     void NotifyTurnChangedClientRpc(int newPlayerTurn)
     {
-        //if (newPlayerTurn - 1 > 0)
-        //    cueControllers[newPlayerTurn - 1].StartCueControlAsync().Forget();
-        //else Debug.Log(newPlayerTurn);
+        uiController.UpdateTurnText(newPlayerTurn);
     }
 
     void ProcessTurnEnd()
@@ -878,16 +851,6 @@ public class GameManager : NetworkBehaviour
         if (!isTypeAssigned)
         {
             if (!isFirstTime.Value) AssignPlayerTypeBasedOnPocketedBalls();
-        }
-        else
-        {
-        //    // 자신의 공이 아닌 공을 포켓했을 경우
-        //    if (pocketedBallsThisTurn.Any(ball => ball.CompareTag(GetOpponentType(playerTurn.Value))))
-        //    {
-        //        hasExtraTurn.Value = false;
-        //        TurnChange();
-        //        return;
-        //    }
         }
 
         isFirstTime.Value = false;
@@ -945,14 +908,10 @@ public class GameManager : NetworkBehaviour
     public override void OnDestroy()
     {
         movementCheckCancellationTokenSource?.Cancel();
-        if (solidCount != null) solidCount.OnValueChanged -= OnSolidCountChanged;
-        if (stripedCount != null) stripedCount.OnValueChanged -= OnStripedCountChanged;
+        //if (solidCount != null) solidCount.OnValueChanged -= OnSolidCountChanged;
+        //if (stripedCount != null) stripedCount.OnValueChanged -= OnStripedCountChanged;
         if (playerTurn != null) playerTurn.OnValueChanged -= OnPlayerTurnChanged;
 
-        if (IsServer)
-        {
-            if (NetworkManager != null ) NetworkManager.OnClientConnectedCallback -= OnClientConnectedCallback;
-        }
         if (IsClient)
         {
             if (players != null) players.OnListChanged -= OnPlayersChanged;
@@ -968,22 +927,20 @@ public class GameManager : NetworkBehaviour
         base.OnDestroy();
     }
 
-    private void OnGUI()
-    {
-        
-        GUI.Label(new Rect(10, 270, 250, 20), $"{mousePos}");
-        GUI.Label(new Rect(10, 170, 250, 20), $"Ball Count - Solid: {solidCount.Value}, Striped: {stripedCount.Value}");
-        GUI.Label(new Rect(10, 190, 250, 20), $"Player {playerTurn.Value}'s Turn");
-        GUI.Label(new Rect(10, 210, 250, 20), $"Player 1 Type: {GetPlayerType(1) ?? "Not Assigned"}");
-        GUI.Label(new Rect(10, 230, 250, 20), $"Player 2 Type: {GetPlayerType(2) ?? "Not Assigned"}");
-        GUI.Label(new Rect(10, 250, 250, 20), $"isFirst: {isFirstTime.Value}");
-        //GUI.Label(new Rect(10, 270, 250, 20), $"My Player Number: {GetMyPlayerNumber()}");
-        GUI.Label(new Rect(10, 150, 250, 20), $"Player 1 ID: {player1ClientId.Value}");
-        GUI.Label(new Rect(10, 130, 250, 20), $"Player 2 ID: {player2ClientId.Value}");
-        GUI.Label(new Rect(10, 110, 250, 20), $"local Client ID: {NetworkManager.Singleton.LocalClientId}");
-        GUI.Label(new Rect(10, 90, 250, 20), $"{playerTurn.Value}");
+    //private void OnGUI()
+    //{
+    //    GUI.Label(new Rect(10, 170, 250, 20), $"Ball Count - Solid: {solidCount.Value}, Striped: {stripedCount.Value}");
+    //    GUI.Label(new Rect(10, 190, 250, 20), $"Player {playerTurn.Value}'s Turn");
+    //    GUI.Label(new Rect(10, 210, 250, 20), $"Player 1 Type: {GetPlayerType(1) ?? "Not Assigned"}");
+    //    GUI.Label(new Rect(10, 230, 250, 20), $"Player 2 Type: {GetPlayerType(2) ?? "Not Assigned"}");
+    //    GUI.Label(new Rect(10, 250, 250, 20), $"isFirst: {isFirstTime.Value}");
+    //    //GUI.Label(new Rect(10, 270, 250, 20), $"My Player Number: {GetMyPlayerNumber()}");
+    //    GUI.Label(new Rect(10, 150, 250, 20), $"Player 1 ID: {player1ClientId.Value}");
+    //    GUI.Label(new Rect(10, 130, 250, 20), $"Player 2 ID: {player2ClientId.Value}");
+    //    GUI.Label(new Rect(10, 110, 250, 20), $"local Client ID: {NetworkManager.Singleton.LocalClientId}");
+    //    GUI.Label(new Rect(10, 90, 250, 20), $"{playerTurn.Value}");
 
-    }
+    //}
 
     [ServerRpc(RequireOwnership = false)]
     public void SetFreeBallServerRpc(bool value)
@@ -1018,14 +975,10 @@ public class GameManager : NetworkBehaviour
         base.OnNetworkDespawn();
 
         // 기존 구독 해제
-        solidCount.OnValueChanged -= OnSolidCountChanged;
-        stripedCount.OnValueChanged -= OnStripedCountChanged;
+        //solidCount.OnValueChanged -= OnSolidCountChanged;
+        //stripedCount.OnValueChanged -= OnStripedCountChanged;
         playerTurn.OnValueChanged -= OnPlayerTurnChanged;
 
-        if (IsServer)
-        {
-            NetworkManager.OnClientConnectedCallback -= OnClientConnectedCallback;
-        }
         if (IsClient)
         {
             players.OnListChanged -= OnPlayersChanged;

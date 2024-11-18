@@ -17,8 +17,6 @@ public class CueBallController : NetworkBehaviour
 
     public void HitBall(Vector3 direction, float power, Vector2 hitPoint)
     {
-        if (!IsServer)
-            return;
         // 방향 벡터 정규화
         direction = -direction.normalized;
 
@@ -44,7 +42,7 @@ public class CueBallController : NetworkBehaviour
             cueBallRigidbody.AddTorque(torqueAxis * torqueMagnitude, ForceMode.Impulse);
 
         }
-
+        Debug.Log("Cue Ball Hitted");
         PlayCueBallHitAudioClientRpc();
     }
     [ClientRpc]
